@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#F5A624" />
+<title>Weer in Zeist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --primary: #F5A624;
+  --primary-dark: #D4890F;
+  --accent: #E84313;
+  --accent-light: #F07830;
+  --sea-blue: #355272;
+  --sky-blue: #4C76BA;
+  --sea-light: #EEF5FC;
+  --sand: #F4ECE7;
+  --sage: #84A09F;
+  --bg: #FFFFFF;
+  --bg-muted: #F8F4F0;
+  --text: #2D2D2D;
+  --text-muted: #6B7280;
+  --border: #ECE6DF;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+  --shadow-card: 0 6px 18px rgba(53, 82, 114, 0.08);
+  --shadow-hero: 0 10px 30px rgba(245, 166, 36, 0.18);
+  --font: 'Nunito', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font);
+  color: var(--text);
+  background: linear-gradient(180deg, var(--sea-light) 0%, var(--bg) 220px, var(--bg) 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+}
+
+/* WebView-fix — voorkomt afkappen onderkant in NoordwijkApp/ZeistApp iframe */
+body {
+  padding-bottom: 600px;
+}
+
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ─── Top bar ─── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 4px 2px;
+}
+.topbar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.topbar__logo {
+  height: 32px;
+  width: auto;
+  flex-shrink: 0;
+}
+.topbar__title {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--sea-blue);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.topbar__updated {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.pulse-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2BAE66;
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+  border: 1px solid var(--border);
+}
+.card h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--sea-blue);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ─── Hero ─── */
+.hero {
+  position: relative;
+  background: linear-gradient(135deg, #FFC76B 0%, var(--primary) 50%, var(--accent-light) 100%);
+  color: #fff;
+  border-radius: var(--radius-lg);
+  padding: 22px 20px;
+  box-shadow: var(--shadow-hero);
+  overflow: hidden;
+  border: none;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  right: -40px;
+  top: -40px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(255,255,255,0.22), transparent 65%);
+  pointer-events: none;
+}
+.hero__location {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.94;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.hero__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  position: relative;
+  z-index: 1;
+}
+.hero__temp {
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+.hero__temp small {
+  font-size: 28px;
+  font-weight: 700;
+  vertical-align: top;
+  margin-left: 4px;
+  opacity: 0.95;
+}
+.hero__icon {
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+.hero__label {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.hero__sub {
+  margin-top: 6px;
+  font-size: 13px;
+  opacity: 0.92;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+/* ─── Buitenweer-verdict band ─── */
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 14px;
+  color: #fff;
+  box-shadow: var(--shadow-card);
+}
+.verdict--top { background: linear-gradient(135deg, #2BAE66, #29CC7A); }
+.verdict--mid { background: linear-gradient(135deg, var(--primary), var(--accent-light)); }
+.verdict--bad { background: linear-gradient(135deg, #5A6B82, var(--sea-blue)); }
+.verdict__icon { font-size: 22px; }
+.verdict__sub {
+  font-weight: 600;
+  font-size: 12px;
+  opacity: 0.9;
+  margin-left: auto;
+  text-align: right;
+}
+
+/* ─── Wind dial ─── */
+.wind {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 16px;
+  align-items: center;
+}
+.compass {
+  width: 110px;
+  height: 110px;
+  position: relative;
+}
+.compass svg { width: 100%; height: 100%; }
+.compass__arrow {
+  transform-origin: 50% 50%;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.wind__num {
+  font-size: 32px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--sea-blue);
+}
+.wind__num small {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-left: 4px;
+}
+.wind__detail {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  line-height: 1.5;
+}
+.wind__rating {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--sky-blue);
+  color: #fff;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  margin-top: 6px;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Stat tiles (gedeeld door zon-rij + details) ─── */
+.stat {
+  background: var(--sea-light);
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+}
+.stat__lbl {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--sea-blue);
+}
+.stat__val {
+  font-size: 20px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+.stat__val small {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-left: 3px;
+}
+.stat__sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ─── Sun / UV ─── */
+.sun-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  text-align: center;
+}
+.sun-row .stat__val { font-size: 17px; }
+.uv-bar {
+  height: 12px;
+  border-radius: var(--radius-pill);
+  margin-top: 12px;
+  background: linear-gradient(90deg, #2BAE66 0%, #F5C518 30%, var(--accent-light) 55%, var(--accent) 75%, #6B2DD1 100%);
+  position: relative;
+}
+.uv-needle {
+  position: absolute;
+  top: -3px;
+  width: 4px;
+  height: 18px;
+  background: #fff;
+  border: 1.5px solid var(--text);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: left 0.6s;
+}
+.uv-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.uv-advice {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 6px;
+}
+
+/* ─── Hourly ─── */
+.hourly {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  margin: 0 -16px;
+  padding: 0 16px 8px;
+  scrollbar-width: thin;
+}
+.hourly::-webkit-scrollbar { height: 4px; }
+.hourly::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+.hour {
+  scroll-snap-align: start;
+  flex: 0 0 auto;
+  width: 56px;
+  text-align: center;
+  background: var(--sea-light);
+  padding: 10px 4px;
+  border-radius: var(--radius-md);
+}
+.hour__time { font-size: 11px; font-weight: 700; color: var(--sea-blue); }
+.hour__icon { width: 30px; height: 30px; margin: 4px auto; display: block; }
+.hour__temp { font-size: 14px; font-weight: 800; }
+.hour__rain { font-size: 10px; color: var(--sky-blue); margin-top: 2px; }
+
+/* ─── Daily ─── */
+.daily { display: flex; flex-direction: column; gap: 6px; }
+.day {
+  display: grid;
+  grid-template-columns: 60px 36px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 4px;
+  border-bottom: 1px dashed var(--border);
+}
+.day:last-child { border-bottom: none; }
+.day__name { font-size: 13px; font-weight: 700; color: var(--sea-blue); }
+.day__icon { width: 32px; height: 32px; }
+.day__bar {
+  height: 6px;
+  background: var(--sea-light);
+  border-radius: var(--radius-pill);
+  position: relative;
+  overflow: hidden;
+}
+.day__bar-fill {
+  position: absolute;
+  top: 0; bottom: 0;
+  background: linear-gradient(90deg, var(--sky-blue), var(--primary), var(--accent-light));
+  border-radius: var(--radius-pill);
+}
+.day__temps {
+  display: flex;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.day__min { color: var(--text-muted); }
+.day__rain { font-size: 10px; color: var(--sky-blue); }
+
+/* ─── Air ─── */
+.aqi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.aqi-ball {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  background: #84A09F;
+  box-shadow: inset 0 -8px 12px rgba(0,0,0,0.12);
+}
+.aqi-info__lbl { font-size: 11px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700; }
+.aqi-info__rank { font-size: 17px; font-weight: 800; }
+.aqi-pollutants {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 11px;
+}
+.aqi-pollutants div {
+  background: var(--sand);
+  padding: 6px 4px;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+.aqi-pollutants strong { display: block; font-size: 13px; color: var(--text); margin-top: 2px; }
+.pollen {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 11px;
+}
+.pollen-item {
+  text-align: center;
+  background: var(--sea-light);
+  padding: 6px 4px;
+  border-radius: var(--radius-md);
+}
+.pollen-item strong { display: block; font-size: 13px; color: var(--text); margin-top: 2px; }
+
+/* ─── Detail-strip ─── */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+/* ─── Footer ─── */
+footer {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 8px 0 4px;
+  line-height: 1.6;
+}
+footer a { color: var(--sea-blue); text-decoration: none; }
+
+/* ─── Errors ─── */
+.section-error {
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-muted);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  text-align: center;
+}
+
+/* ─── Mobile tweaks ─── */
+@media (max-width: 380px) {
+  .hero__temp { font-size: 60px; }
+  .hero__icon { width: 80px; height: 80px; }
+  .detail-grid { grid-template-columns: repeat(2, 1fr); }
+  .aqi-pollutants { grid-template-columns: repeat(2, 1fr); }
+  .pollen { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<main>
+
+  <!-- ─── 1. Top bar ─── -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <img class="topbar__logo" src="https://www.zeistapp.nl/wp-content/uploads/2025/10/Zeist_logo_tekst-2048x874-1.png" alt="ZeistApp" loading="lazy" />
+      <span class="topbar__title">Weer · Zeist</span>
+    </div>
+    <div class="topbar__updated">
+      <span class="pulse-dot"></span>
+      <span id="updateTime">—</span>
+    </div>
+  </header>
+
+  <!-- ─── 2. Hero ─── -->
+  <section class="hero" id="heroCard">
+    <div class="hero__location">📍 Zeist</div>
+    <div class="hero__row">
+      <div>
+        <div class="hero__temp"><span id="heroTemp">--</span><small>°C</small></div>
+        <div class="hero__label" id="heroLabel">—</div>
+        <div class="hero__sub" id="heroSub">—</div>
+      </div>
+      <div class="hero__icon" id="heroIcon"></div>
+    </div>
+  </section>
+
+  <!-- ─── 3. Buitenweer verdict ─── -->
+  <section class="verdict verdict--mid" id="verdict">
+    <span class="verdict__icon" id="verdictIcon">🌥️</span>
+    <span id="verdictText">Buitenweer wordt geladen…</span>
+    <span class="verdict__sub" id="verdictSub"></span>
+  </section>
+
+  <!-- ─── 5. Wind ─── -->
+  <section class="card">
+    <h2>💨 Wind</h2>
+    <div class="wind">
+      <div class="compass">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="46" fill="#EEF5FC" stroke="#4C76BA" stroke-width="2"/>
+          <text x="50" y="14" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">N</text>
+          <text x="86" y="53" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">O</text>
+          <text x="50" y="92" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">Z</text>
+          <text x="14" y="53" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">W</text>
+          <g class="compass__arrow" id="windArrow">
+            <polygon points="50,22 56,52 50,46 44,52" fill="#E84313"/>
+            <polygon points="50,78 56,48 50,54 44,48" fill="#84A09F"/>
+          </g>
+          <circle cx="50" cy="50" r="4" fill="#355272"/>
+        </svg>
+      </div>
+      <div>
+        <div class="wind__num"><span id="windBft">--</span> Bft<small id="windDescr">—</small></div>
+        <div class="wind__detail" id="windDetail">—</div>
+        <span class="wind__rating" id="windRating" hidden></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── 8. Sun / UV ─── -->
+  <section class="card">
+    <h2>☀️ Zon &amp; UV</h2>
+    <div class="sun-row">
+      <div class="stat"><div class="stat__lbl">Op</div><div class="stat__val" id="sunRise">—</div></div>
+      <div class="stat"><div class="stat__lbl">Onder</div><div class="stat__val" id="sunSet">—</div></div>
+      <div class="stat"><div class="stat__lbl">Daglengte</div><div class="stat__val" id="sunDur">—</div></div>
+    </div>
+    <div class="uv-bar"><div class="uv-needle" id="uvNeedle" style="left:0%"></div></div>
+    <div class="uv-meta"><span>UV-index nu: <strong id="uvNow">—</strong></span><span>Max vandaag: <strong id="uvMax">—</strong></span></div>
+    <div class="uv-advice" id="uvAdvice"></div>
+  </section>
+
+  <!-- ─── 9. Hourly forecast ─── -->
+  <section class="card">
+    <h2>🕐 Komende 24 uur</h2>
+    <div class="hourly" id="hourly"></div>
+  </section>
+
+  <!-- ─── 10. 7-day forecast ─── -->
+  <section class="card">
+    <h2>📅 7 dagen vooruit</h2>
+    <div class="daily" id="daily"></div>
+  </section>
+
+  <!-- ─── 11. Air quality + pollen ─── -->
+  <section class="card" id="airCard">
+    <h2>🌬️ Lucht &amp; pollen</h2>
+    <div class="aqi">
+      <div class="aqi-ball" id="aqiBall">—</div>
+      <div>
+        <div class="aqi-info__lbl">Europese AQI</div>
+        <div class="aqi-info__rank" id="aqiRank">—</div>
+      </div>
+    </div>
+    <div class="aqi-pollutants" id="aqiPollutants"></div>
+    <div class="pollen" id="pollen"></div>
+  </section>
+
+  <!-- ─── 12. Detail strip ─── -->
+  <section class="card">
+    <h2>📊 Details</h2>
+    <div class="detail-grid" id="detailGrid"></div>
+  </section>
+
+  <!-- ─── 13. Footer ─── -->
+  <footer>
+    Bronnen: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> ·
+    <a href="https://www.buienradar.nl" target="_blank" rel="noopener">Buienradar</a>
+    <div style="margin-top:4px;opacity:0.6">Vernieuwt elke 10 minuten</div>
+  </footer>
+
+</main>
+</body>
+</html>
