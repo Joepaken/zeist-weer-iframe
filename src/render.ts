@@ -25,6 +25,8 @@ const ICONS: Record<IconKey, string> = {
   rain: '<svg viewBox="0 0 64 64"><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#5A6B82" stroke-width="2"/><g stroke="#4C76BA" stroke-width="3" stroke-linecap="round"><path d="M22 52l-3 7"/><path d="M32 52l-3 7"/><path d="M42 52l-3 7"/></g></svg>',
   'rain-heavy':
     '<svg viewBox="0 0 64 64"><path d="M14 28c-5 0-8 4-8 9 0 5 4 9 9 9h34c6 0 10-4 10-10 0-6-5-10-11-10-2-7-9-11-16-9-5 2-8 6-9 11-3 0-6 0-9 0z" fill="#9FAFC0" stroke="#355272" stroke-width="2"/><g stroke="#355272" stroke-width="3.5" stroke-linecap="round"><path d="M18 50l-4 9"/><path d="M28 50l-4 9"/><path d="M38 50l-4 9"/><path d="M48 50l-4 9"/></g></svg>',
+  'sun-shower':
+    '<svg viewBox="0 0 64 64"><circle cx="18" cy="14" r="9" fill="#FFD56B"/><g stroke="#FFD56B" stroke-width="2.5" stroke-linecap="round"><path d="M18 1v3"/><path d="M3 14h3"/><path d="M6 3l2 2"/><path d="M30 3l-2 2"/></g><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#84A09F" stroke-width="2"/><g stroke="#4C76BA" stroke-width="3" stroke-linecap="round"><path d="M24 52l-3 7"/><path d="M38 52l-3 7"/></g></svg>',
   snow: '<svg viewBox="0 0 64 64"><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#84A09F" stroke-width="2"/><g fill="#4C76BA" font-size="11" font-weight="700"><text x="20" y="60">❄</text><text x="32" y="60">❄</text><text x="44" y="60">❄</text></g></svg>',
   sleet:
     '<svg viewBox="0 0 64 64"><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#84A09F" stroke-width="2"/><g stroke="#4C76BA" stroke-width="2.5" stroke-linecap="round"><path d="M24 52l-3 7"/><path d="M40 52l-3 7"/></g><circle cx="32" cy="56" r="2.5" fill="#9FAFC0"/></svg>',
@@ -111,7 +113,7 @@ function renderHourly(hours: HourlyEntry[]): string {
         timeZone: 'Europe/Amsterdam',
       });
       const icon = ICONS[h.iconKey] ?? ICONS.cloudy;
-      const rain = h.precipitationProb >= 5 ? `💧${round(h.precipitationProb)}%` : '&nbsp;';
+      const rain = h.precipitationProb >= 20 ? `💧${round(h.precipitationProb)}%` : '&nbsp;';
       return `<div class="hour"><div class="hour__time">${escHtml(t)}</div><div class="hour__icon">${icon}</div><div class="hour__temp">${round(h.temperature)}°</div><div class="hour__rain">${rain}</div></div>`;
     })
     .join('');
@@ -130,10 +132,12 @@ function renderDaily(days: DailyEntry[]): string {
       const width = Math.max(((d.tempMax - d.tempMin) / range) * 100, 6);
       const bft = msToBft(d.windMaxMs).bft;
       const dayName = i === 0 ? 'Vandaag' : i === 1 ? 'Morgen' : fmtDayShort(d.date);
+      const sunTxt = d.sunHours != null ? `☀️ ${round(d.sunHours, 1)}u · ` : '';
       const rainTxt =
-        d.precipitationSum > 0.1
+        sunTxt +
+        (d.precipitationSum > 0.1
           ? `💧 ${round(d.precipitationSum, 1)} mm · Bft ${bft}`
-          : `droog · Bft ${bft}`;
+          : `droog · Bft ${bft}`);
       return `<div class="day"><div class="day__name">${escHtml(dayName)}</div><div class="day__icon">${icon}</div><div><div class="day__bar"><div class="day__bar-fill" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%"></div></div><div class="day__rain">${rainTxt}</div></div><div class="day__temps"><span>${round(d.tempMax)}°</span><span class="day__min">${round(d.tempMin)}°</span></div></div>`;
     })
     .join('');
@@ -251,21 +255,23 @@ export function renderDashboard(template: string, snap: WeerSnapshot | null): st
   if (w) {
     const t = w.temperature;
     const bft = msToBft(w.windMs).bft;
-    const rain = today ? today.precipitationSum : w.precipitation;
+    // Alleen regen die overdag valt telt mee — nachtregen maakt een
+    // zonnige dag geen "geen weer voor buiten".
+    const rain = today ? today.daytimePrecipSum : w.precipitation;
     let cls = 'verdict--mid';
     let icon = '🌥️';
     let text = 'Matig buitenweer';
-    let subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm verwacht`;
-    if (t >= 20 && bft <= 4 && rain < 1) {
+    let subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm overdag`;
+    if (t >= 18 && bft <= 4 && rain < 1) {
       cls = 'verdict--top';
       icon = '☀️';
       text = 'Top buitenweer!';
       subTxt = `${round(t)}° · Bft ${bft} · droog`;
-    } else if (t < 14 || bft >= 6 || rain > 5) {
+    } else if (t < 12 || bft >= 6 || rain > 5) {
       cls = 'verdict--bad';
       icon = '⛈️';
       text = 'Geen weer voor buiten';
-      subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm`;
+      subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm overdag`;
     }
     html = html.replace(
       '<section class="verdict verdict--mid" id="verdict">',

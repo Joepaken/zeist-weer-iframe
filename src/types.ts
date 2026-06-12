@@ -37,9 +37,17 @@ export interface HourlyEntry {
 
 export interface DailyEntry {
   date: string;
+  /** Ruwe Open-Meteo dagcode (zwaarste conditie van de dag, incl. nacht). */
   weatherCode: number;
+  /** Afgeleid van de daglichturen (zonsopkomst–ondergang), niet van weatherCode. */
   iconKey: IconKey;
   labelNL: string;
+  /** Zonuren overdag, 1 decimaal; null als het model geen zonneschijndata gaf. */
+  sunHours: number | null;
+  /** Neerslag (mm) tussen zonsopkomst en -ondergang. */
+  daytimePrecipSum: number;
+  /** Daglichturen met ≥ 0,1 mm neerslag. */
+  daytimePrecipHours: number;
   tempMax: number;
   tempMin: number;
   precipitationSum: number;

@@ -4,6 +4,7 @@
  */
 
 import { wmoToInfo } from '../util/wmoIcon.js';
+import { deriveDayInfo } from '../util/dailyIcon.js';
 import type {
   WeatherBlock,
   AirQualityBlock,
@@ -68,6 +69,9 @@ interface OmForecastResponse {
     uv_index: number[];
     visibility: number[];
     dew_point_2m: number[];
+    // Optioneel: ontbreken mag nooit een crash geven (oudere modelruns).
+    sunshine_duration?: Array<number | null>;
+    cloud_cover?: Array<number | null>;
   };
   daily: {
     time: string[];
@@ -77,6 +81,7 @@ interface OmForecastResponse {
     sunrise: string[];
     sunset: string[];
     daylight_duration: number[];
+    sunshine_duration?: Array<number | null>;
     uv_index_max: number[];
     precipitation_sum: number[];
     precipitation_hours: number[];
@@ -93,9 +98,9 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlo
     current:
       'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index',
     hourly:
-      'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,visibility,dew_point_2m',
+      'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,visibility,dew_point_2m,sunshine_duration,cloud_cover',
     daily:
-      'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_sum,precipitation_hours,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant',
+      'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,sunshine_duration,uv_index_max,precipitation_sum,precipitation_hours,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant',
     wind_speed_unit: 'ms',
     timezone: 'Europe/Amsterdam',
     forecast_days: 7,
@@ -126,12 +131,30 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlo
 
   const daily: DailyEntry[] = data.daily.time.map((d, i) => {
     const wc = data.daily.weather_code[i] ?? 0;
-    const info = wmoToInfo(wc);
+    const derived = deriveDayInfo({
+      date: d,
+      sunrise: data.daily.sunrise[i] ?? '',
+      sunset: data.daily.sunset[i] ?? '',
+      daylightSeconds: Math.round(data.daily.daylight_duration[i] ?? 0),
+      rawDailyCode: wc,
+      hourlyTime: data.hourly.time,
+      hourlyWeatherCode: data.hourly.weather_code,
+      hourlyPrecipitation: data.hourly.precipitation,
+      hourlySunshine: data.hourly.sunshine_duration,
+      hourlyCloudCover: data.hourly.cloud_cover,
+      dailySunshineSeconds: data.daily.sunshine_duration?.[i] ?? null,
+    });
+    if (process.env.DEBUG_DAILY_ICON === '1') {
+      console.log(`[dailyIcon] ${d} raw=${wc}(${wmoToInfo(wc).iconKey}) →`, derived);
+    }
     return {
       date: d,
       weatherCode: wc,
-      iconKey: info.iconKey,
-      labelNL: info.labelNL,
+      iconKey: derived.iconKey,
+      labelNL: derived.labelNL,
+      sunHours: derived.sunHours,
+      daytimePrecipSum: derived.daytimePrecipSum,
+      daytimePrecipHours: derived.daytimePrecipHours,
       tempMax: data.daily.temperature_2m_max[i] ?? 0,
       tempMin: data.daily.temperature_2m_min[i] ?? 0,
       precipitationSum: data.daily.precipitation_sum[i] ?? 0,
