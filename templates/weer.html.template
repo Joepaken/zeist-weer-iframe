@@ -482,6 +482,36 @@ footer a { color: var(--sea-blue); text-decoration: none; }
   .aqi-pollutants { grid-template-columns: repeat(2, 1fr); }
   .pollen { grid-template-columns: repeat(2, 1fr); }
 }
+/* ─── Getij ─── */
+.tide__chart { width: 100%; height: 96px; margin: 6px 0 4px; display: block; }
+.tide__list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.tide__item { background: #EEF5FC; border-radius: 12px; padding: 8px 10px; }
+.tide__item--hw { box-shadow: inset 3px 0 0 #4C76BA; }
+.tide__item--lw { box-shadow: inset 3px 0 0 #84A09F; }
+.tide__lbl { font-size: 10px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #4C76BA; }
+.tide__time { font-size: 17px; font-weight: 800; margin: 1px 0; }
+.tide__lvl { font-size: 11px; color: #6B7B82; }
+.tide__source { font-size: 11px; color: #6B7B82; margin-top: 8px; }
+
+/* ─── Stormvloedkering ─── */
+.barrier__status { display: inline-block; font-weight: 800; padding: 6px 12px; border-radius: 999px; font-size: 14px; margin-bottom: 6px; }
+.barrier--ok { background: #E3F4EA; color: #1F8A50; }
+.barrier--warn { background: #FCE3D6; color: #C2410C; }
+.barrier__hw { font-weight: 700; margin-bottom: 6px; }
+.barrier__info { font-size: 13px; line-height: 1.5; margin: 6px 0; color: #3a3a3a; }
+.barrier__note { font-size: 11px; color: #6B7B82; }
+
+/* ─── Natuurbrandrisico ─── */
+.firerisk { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.firerisk__badge { color: #fff; font-weight: 800; padding: 6px 14px; border-radius: 999px; font-size: 15px; }
+.firerisk__reason { font-size: 13px; color: #3a3a3a; }
+.firerisk__note { font-size: 11px; color: #6B7B82; margin-top: 8px; }
+
+/* ─── Natuur-recreatie ─── */
+.nature__advice { font-size: 15px; font-weight: 700; line-height: 1.5; }
+
+/* ─── Pollen-accent ─── */
+.pollen-lead { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -518,6 +548,9 @@ footer a { color: var(--sea-blue); text-decoration: none; }
     <span id="verdictText">Buitenweer wordt geladen…</span>
     <span class="verdict__sub" id="verdictSub"></span>
   </section>
+
+  <!-- ─── 4. Lokale extra's (getij / kering / natuurbrand / natuur) ─── -->
+  <!--EXTRA_SECTIONS-->
 
   <!-- ─── 5. Wind ─── -->
   <section class="card">

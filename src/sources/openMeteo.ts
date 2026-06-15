@@ -4,6 +4,7 @@
  */
 
 import { wmoToInfo } from '../util/wmoIcon.js';
+import { deriveDayInfo } from '../util/dailyIcon.js';
 import type {
   WeatherBlock,
   AirQualityBlock,
@@ -51,7 +52,7 @@ interface OmForecastResponse {
     wind_speed_10m: number;
     wind_direction_10m: number;
     wind_gusts_10m: number;
-    uv_index: number;
+    uv_index: number | null; // null bij KNMI-model
   };
   hourly: {
     time: string[];
@@ -68,6 +69,9 @@ interface OmForecastResponse {
     uv_index: number[];
     visibility: number[];
     dew_point_2m: number[];
+    // Optioneel: ontbreken mag nooit een crash geven (oudere modelruns).
+    sunshine_duration?: Array<number | null>;
+    cloud_cover?: Array<number | null>;
   };
   daily: {
     time: string[];
@@ -77,7 +81,8 @@ interface OmForecastResponse {
     sunrise: string[];
     sunset: string[];
     daylight_duration: number[];
-    uv_index_max: number[];
+    sunshine_duration?: Array<number | null>;
+    uv_index_max: Array<number | null>; // null bij KNMI-model
     precipitation_sum: number[];
     precipitation_hours: number[];
     wind_speed_10m_max: number[];
@@ -86,20 +91,27 @@ interface OmForecastResponse {
   };
 }
 
-export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlock> {
-  const url = buildQuery(FORECAST_URL, {
+export async function fetchWeather(
+  lat: number,
+  lon: number,
+  model?: string,
+): Promise<WeatherBlock> {
+  const params: Record<string, string | number> = {
     latitude: lat,
     longitude: lon,
     current:
       'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index',
     hourly:
-      'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,visibility,dew_point_2m',
+      'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,pressure_msl,wind_speed_10m,wind_direction_10m,wind_gusts_10m,uv_index,visibility,dew_point_2m,sunshine_duration,cloud_cover',
     daily:
-      'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,uv_index_max,precipitation_sum,precipitation_hours,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant',
+      'weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,daylight_duration,sunshine_duration,uv_index_max,precipitation_sum,precipitation_hours,wind_speed_10m_max,wind_gusts_10m_max,wind_direction_10m_dominant',
     wind_speed_unit: 'ms',
     timezone: 'Europe/Amsterdam',
     forecast_days: 7,
-  });
+  };
+  // KNMI HARMONIE (knmi_seamless) = hyperlokaal 2,5km voor NL.
+  if (model) params.models = model;
+  const url = buildQuery(FORECAST_URL, params);
 
   const data = await fetchJson<OmForecastResponse>(url, 'open-meteo/forecast');
 
@@ -126,12 +138,30 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlo
 
   const daily: DailyEntry[] = data.daily.time.map((d, i) => {
     const wc = data.daily.weather_code[i] ?? 0;
-    const info = wmoToInfo(wc);
+    const derived = deriveDayInfo({
+      date: d,
+      sunrise: data.daily.sunrise[i] ?? '',
+      sunset: data.daily.sunset[i] ?? '',
+      daylightSeconds: Math.round(data.daily.daylight_duration[i] ?? 0),
+      rawDailyCode: wc,
+      hourlyTime: data.hourly.time,
+      hourlyWeatherCode: data.hourly.weather_code,
+      hourlyPrecipitation: data.hourly.precipitation,
+      hourlySunshine: data.hourly.sunshine_duration,
+      hourlyCloudCover: data.hourly.cloud_cover,
+      dailySunshineSeconds: data.daily.sunshine_duration?.[i] ?? null,
+    });
+    if (process.env.DEBUG_DAILY_ICON === '1') {
+      console.log(`[dailyIcon] ${d} raw=${wc}(${wmoToInfo(wc).iconKey}) →`, derived);
+    }
     return {
       date: d,
       weatherCode: wc,
-      iconKey: info.iconKey,
-      labelNL: info.labelNL,
+      iconKey: derived.iconKey,
+      labelNL: derived.labelNL,
+      sunHours: derived.sunHours,
+      daytimePrecipSum: derived.daytimePrecipSum,
+      daytimePrecipHours: derived.daytimePrecipHours,
       tempMax: data.daily.temperature_2m_max[i] ?? 0,
       tempMin: data.daily.temperature_2m_min[i] ?? 0,
       precipitationSum: data.daily.precipitation_sum[i] ?? 0,
@@ -162,12 +192,57 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlo
     windMs: c.wind_speed_10m,
     windDir: c.wind_direction_10m,
     windGustMs: c.wind_gusts_10m,
-    uvIndex: c.uv_index,
+    uvIndex: c.uv_index ?? 0,
     visibilityM: data.hourly.visibility[lastIdx] ?? 0,
     dewPoint: data.hourly.dew_point_2m[lastIdx] ?? 0,
   };
 
+  // KNMI-modellen leveren geen UV-index → vul aan vanuit het default-model.
+  const uvMissing = c.uv_index == null || data.daily.uv_index_max.every((v) => v == null);
+  if (uvMissing) {
+    try {
+      const uv = await fetchUvTopup(lat, lon);
+      current.uvIndex = uv.currentUv;
+      for (let i = 0; i < daily.length; i++) {
+        const v = uv.dailyUvMax[i];
+        if (v != null) daily[i]!.uvIndexMax = v;
+      }
+    } catch {
+      /* UV blijft 0 — niet fataal voor de rest van het weer */
+    }
+  }
+
   return { current, hourly, daily };
+}
+
+interface OmUvResponse {
+  hourly?: { time: string[]; uv_index: Array<number | null> };
+  daily?: { uv_index_max: Array<number | null> };
+}
+
+/** UV-index uit het default-model (KNMI levert die niet). */
+async function fetchUvTopup(
+  lat: number,
+  lon: number,
+): Promise<{ currentUv: number; dailyUvMax: Array<number | null> }> {
+  const url = buildQuery(FORECAST_URL, {
+    latitude: lat,
+    longitude: lon,
+    hourly: 'uv_index',
+    daily: 'uv_index_max',
+    timezone: 'Europe/Amsterdam',
+    forecast_days: 7,
+  });
+  const data = await fetchJson<OmUvResponse>(url, 'open-meteo/uv-topup');
+  const times = data.hourly?.time ?? [];
+  const uvs = data.hourly?.uv_index ?? [];
+  const nowMs = Date.now();
+  let idx = times.findIndex((t) => Date.parse(t) >= nowMs);
+  if (idx < 0) idx = 0;
+  return {
+    currentUv: uvs[idx] ?? 0,
+    dailyUvMax: data.daily?.uv_index_max ?? [],
+  };
 }
 
 interface OmAirResponse {

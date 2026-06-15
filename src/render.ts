@@ -6,9 +6,17 @@
  */
 
 import type { IconKey } from './util/wmoIcon.js';
-import type { WeerSnapshot, HourlyEntry, DailyEntry } from './types.js';
+import type {
+  WeerSnapshot,
+  HourlyEntry,
+  DailyEntry,
+  TideBlock,
+  TideExtreme,
+  FireRiskBlock,
+} from './types.js';
 import { msToBft } from './util/beaufort.js';
 import { degToCompass } from './util/windRose.js';
+import type { MunicipalityConfig, StormSurgeBarrier } from './municipalities.js';
 
 const ICONS: Record<IconKey, string> = {
   clear:
@@ -25,6 +33,8 @@ const ICONS: Record<IconKey, string> = {
   rain: '<svg viewBox="0 0 64 64"><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#5A6B82" stroke-width="2"/><g stroke="#4C76BA" stroke-width="3" stroke-linecap="round"><path d="M22 52l-3 7"/><path d="M32 52l-3 7"/><path d="M42 52l-3 7"/></g></svg>',
   'rain-heavy':
     '<svg viewBox="0 0 64 64"><path d="M14 28c-5 0-8 4-8 9 0 5 4 9 9 9h34c6 0 10-4 10-10 0-6-5-10-11-10-2-7-9-11-16-9-5 2-8 6-9 11-3 0-6 0-9 0z" fill="#9FAFC0" stroke="#355272" stroke-width="2"/><g stroke="#355272" stroke-width="3.5" stroke-linecap="round"><path d="M18 50l-4 9"/><path d="M28 50l-4 9"/><path d="M38 50l-4 9"/><path d="M48 50l-4 9"/></g></svg>',
+  'sun-shower':
+    '<svg viewBox="0 0 64 64"><circle cx="18" cy="14" r="9" fill="#FFD56B"/><g stroke="#FFD56B" stroke-width="2.5" stroke-linecap="round"><path d="M18 1v3"/><path d="M3 14h3"/><path d="M6 3l2 2"/><path d="M30 3l-2 2"/></g><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#84A09F" stroke-width="2"/><g stroke="#4C76BA" stroke-width="3" stroke-linecap="round"><path d="M24 52l-3 7"/><path d="M38 52l-3 7"/></g></svg>',
   snow: '<svg viewBox="0 0 64 64"><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#84A09F" stroke-width="2"/><g fill="#4C76BA" font-size="11" font-weight="700"><text x="20" y="60">❄</text><text x="32" y="60">❄</text><text x="44" y="60">❄</text></g></svg>',
   sleet:
     '<svg viewBox="0 0 64 64"><path d="M16 30c-5 0-9 4-9 9 0 5 4 9 9 9h32c6 0 10-4 10-10 0-6-5-10-11-10-1-7-8-11-15-9-5 2-8 6-9 11-3 0-6 0-7 0z" fill="#fff" stroke="#84A09F" stroke-width="2"/><g stroke="#4C76BA" stroke-width="2.5" stroke-linecap="round"><path d="M24 52l-3 7"/><path d="M40 52l-3 7"/></g><circle cx="32" cy="56" r="2.5" fill="#9FAFC0"/></svg>',
@@ -111,7 +121,7 @@ function renderHourly(hours: HourlyEntry[]): string {
         timeZone: 'Europe/Amsterdam',
       });
       const icon = ICONS[h.iconKey] ?? ICONS.cloudy;
-      const rain = h.precipitationProb >= 5 ? `💧${round(h.precipitationProb)}%` : '&nbsp;';
+      const rain = h.precipitationProb >= 20 ? `💧${round(h.precipitationProb)}%` : '&nbsp;';
       return `<div class="hour"><div class="hour__time">${escHtml(t)}</div><div class="hour__icon">${icon}</div><div class="hour__temp">${round(h.temperature)}°</div><div class="hour__rain">${rain}</div></div>`;
     })
     .join('');
@@ -130,16 +140,21 @@ function renderDaily(days: DailyEntry[]): string {
       const width = Math.max(((d.tempMax - d.tempMin) / range) * 100, 6);
       const bft = msToBft(d.windMaxMs).bft;
       const dayName = i === 0 ? 'Vandaag' : i === 1 ? 'Morgen' : fmtDayShort(d.date);
+      const sunTxt = d.sunHours != null ? `☀️ ${round(d.sunHours, 1)}u · ` : '';
       const rainTxt =
-        d.precipitationSum > 0.1
+        sunTxt +
+        (d.precipitationSum > 0.1
           ? `💧 ${round(d.precipitationSum, 1)} mm · Bft ${bft}`
-          : `droog · Bft ${bft}`;
+          : `droog · Bft ${bft}`);
       return `<div class="day"><div class="day__name">${escHtml(dayName)}</div><div class="day__icon">${icon}</div><div><div class="day__bar"><div class="day__bar-fill" style="left:${left.toFixed(1)}%;width:${width.toFixed(1)}%"></div></div><div class="day__rain">${rainTxt}</div></div><div class="day__temps"><span>${round(d.tempMax)}°</span><span class="day__min">${round(d.tempMin)}°</span></div></div>`;
     })
     .join('');
 }
 
-function renderAir(snap: WeerSnapshot): {
+function renderAir(
+  snap: WeerSnapshot,
+  pollenProminent: boolean,
+): {
   aqiBall: string;
   aqiColor: string;
   aqiRank: string;
@@ -180,12 +195,21 @@ function renderAir(snap: WeerSnapshot): {
     const lv = pollenLevel(v);
     return `<div class="pollen-item" style="border-left:3px solid ${lv.color}">${name}<strong>${lv.lbl}</strong></div>`;
   };
-  const pollen = [
+  const pollenItems = [
     pollenItem('🌿 Gras', a.pollenGrass),
     pollenItem('🌳 Berk', a.pollenBirch),
     pollenItem('🌲 Els', a.pollenAlder),
     pollenItem('🌾 Ambrosia', a.pollenRagweed),
   ].join('');
+  let pollen = pollenItems;
+  if (pollenProminent) {
+    const vals = [a.pollenGrass, a.pollenBirch, a.pollenAlder, a.pollenRagweed].map((v) => v ?? -1);
+    const worst = Math.max(...vals);
+    const lead = pollenLevel(worst >= 0 ? worst : null);
+    pollen =
+      `<div class="pollen-lead">Hooikoorts nu: <span style="color:${lead.color}">${lead.lbl}</span></div>` +
+      pollenItems;
+  }
 
   return { aqiBall: ball, aqiColor: info.color, aqiRank: info.rank, pollutants, pollen };
 }
@@ -216,13 +240,179 @@ function renderDetails(snap: WeerSnapshot): string {
     .join('');
 }
 
-export function renderDashboard(template: string, snap: WeerSnapshot | null): string {
-  if (!snap) return template;
+/**
+ * Cosinus-interpolatie tussen opeenvolgende HW/LW-extremen → SVG-pad
+ * voor de getij-grafiek (320×100 viewBox). Geport uit NoordwijkWeerApp.
+ */
+function buildTidePath(extremes: TideExtreme[]): { path: string; markerX: number; markerY: number } {
+  if (extremes.length < 2) return { path: '', markerX: 0, markerY: 50 };
+  const W = 320;
+  const H = 100;
+  const PAD = 8;
+  const t0 = new Date(extremes[0]!.time).getTime();
+  const tEnd = new Date(extremes[extremes.length - 1]!.time).getTime();
+  const span = tEnd - t0;
+  const allLevels = extremes.map((e) => e.levelCmNap);
+  const minL = Math.min(...allLevels);
+  const maxL = Math.max(...allLevels);
+  const rangeL = Math.max(maxL - minL, 1);
+  const yFor = (lvl: number): number => H - PAD - ((lvl - minL) / rangeL) * (H - 2 * PAD);
+  const xFor = (ms: number): number => ((ms - t0) / span) * W;
+
+  const pts: string[] = [];
+  for (let s = 0; s < extremes.length - 1; s++) {
+    const a = extremes[s]!;
+    const b = extremes[s + 1]!;
+    const aMs = new Date(a.time).getTime();
+    const bMs = new Date(b.time).getTime();
+    const steps = 20;
+    for (let i = 0; i <= steps; i++) {
+      const f = i / steps;
+      const lvl = a.levelCmNap + ((b.levelCmNap - a.levelCmNap) * (1 - Math.cos(Math.PI * f))) / 2;
+      const ms = aMs + (bMs - aMs) * f;
+      pts.push(`${xFor(ms).toFixed(1)},${yFor(lvl).toFixed(1)}`);
+    }
+  }
+
+  const now = Date.now();
+  let markerX = 0;
+  let markerY = H / 2;
+  if (now >= t0 && now <= tEnd) {
+    for (let s = 0; s < extremes.length - 1; s++) {
+      const a = extremes[s]!;
+      const b = extremes[s + 1]!;
+      const aMs = new Date(a.time).getTime();
+      const bMs = new Date(b.time).getTime();
+      if (now >= aMs && now <= bMs) {
+        const f = (now - aMs) / (bMs - aMs);
+        const lvl = a.levelCmNap + ((b.levelCmNap - a.levelCmNap) * (1 - Math.cos(Math.PI * f))) / 2;
+        markerX = xFor(now);
+        markerY = yFor(lvl);
+        break;
+      }
+    }
+  }
+
+  return { path: `M${pts.join(' L')}`, markerX, markerY };
+}
+
+function renderTideChart(extremes: TideExtreme[]): string {
+  if (extremes.length < 2) return '';
+  const { path, markerX, markerY } = buildTidePath(extremes);
+  return [
+    `<defs><linearGradient id="tideFill" x1="0" x2="0" y1="0" y2="1">`,
+    `<stop offset="0%" stop-color="#4C76BA" stop-opacity="0.45"/>`,
+    `<stop offset="100%" stop-color="#4C76BA" stop-opacity="0.05"/>`,
+    `</linearGradient></defs>`,
+    `<path d="${path} L320,100 L0,100 Z" fill="url(#tideFill)"/>`,
+    `<path d="${path}" stroke="#355272" stroke-width="2" fill="none"/>`,
+    `<circle cx="${markerX.toFixed(1)}" cy="${markerY.toFixed(1)}" r="4.5" fill="#E84313" stroke="#fff" stroke-width="2"/>`,
+  ].join('');
+}
+
+function renderTideList(extremes: TideExtreme[]): string {
+  return extremes
+    .slice(0, 4)
+    .map((e) => {
+      const sign = e.levelCmNap >= 0 ? '+' : '';
+      const cls = e.type === 'HW' ? 'tide__item tide__item--hw' : 'tide__item tide__item--lw';
+      const label = e.type === 'HW' ? 'Hoogwater' : 'Laagwater';
+      return `<div class="${cls}"><div class="tide__lbl">${label}</div><div class="tide__time">${escHtml(fmtTime(e.time))}</div><div class="tide__lvl">${sign}${e.levelCmNap} cm NAP</div></div>`;
+    })
+    .join('');
+}
+
+function renderTideCard(tide: TideBlock, cfg: MunicipalityConfig): string {
+  const water = cfg.tideWaterName ? ` · ${escHtml(cfg.tideWaterName)}` : '';
+  return `<section class="card" id="tideCard"><h2>🌊 Eb &amp; vloed${water}</h2><svg class="tide__chart" viewBox="0 0 320 100" preserveAspectRatio="none" aria-hidden="true">${renderTideChart(tide.next)}</svg><div class="tide__list">${renderTideList(tide.next)}</div><div class="tide__source">Bron: Rijkswaterstaat (${escHtml(tide.station)})</div></section>`;
+}
+
+function renderBarrierCard(tide: TideBlock, barrier: StormSurgeBarrier): string {
+  const nextHw = tide.next.find((e) => e.type === 'HW');
+  const willClose = nextHw ? nextHw.levelCmNap >= barrier.closeLevelCmNap : false;
+  const statusCls = willClose ? 'barrier--warn' : 'barrier--ok';
+  const statusTxt = willClose ? 'Kan sluiten bij verwacht hoogwater' : 'Open — geen sluiting verwacht';
+  const hwTxt = nextHw
+    ? `Eerstvolgend hoogwater: ${nextHw.levelCmNap >= 0 ? '+' : ''}${nextHw.levelCmNap} cm NAP om ${escHtml(fmtTime(nextHw.time))}`
+    : 'Geen hoogwater-data';
+  return `<section class="card" id="barrierCard"><h2>🚧 ${escHtml(barrier.name)}</h2><div class="barrier__status ${statusCls}">${escHtml(statusTxt)}</div><div class="barrier__hw">${hwTxt}</div><p class="barrier__info">${escHtml(barrier.infoNL)}</p><div class="barrier__note">Indicatief — sluitpeil ${barrier.closeLevelCmNap} cm NAP. De daadwerkelijke sluiting bepaalt Rijkswaterstaat.</div></section>`;
+}
+
+function renderFireRiskCard(fr: FireRiskBlock): string {
+  return `<section class="card" id="fireRiskCard"><h2>🔥 Natuurbrandrisico</h2><div class="firerisk"><span class="firerisk__badge" style="background:${fr.color}">${escHtml(fr.label)}</span><span class="firerisk__reason">${escHtml(fr.reasonNL)}</span></div><div class="firerisk__note">Indicatief — afgeleid uit het weer, geen officiële natuurbrandindex.</div></section>`;
+}
+
+function renderNatureCard(kind: 'biesbosch' | 'heuvelrug', snap: WeerSnapshot): string {
+  const w = snap.weather?.current;
+  const t = w ? w.temperature : null;
+  const bft = w ? msToBft(w.windMs).bft : 0;
+  const rain = snap.weather?.daily?.[0]?.daytimePrecipSum ?? 0;
+  let title: string;
+  let advice: string;
+  if (kind === 'biesbosch') {
+    title = '🛶 De Biesbosch';
+    if (bft >= 5) advice = 'Veel wind — kanoën in de kreken is zwaar; kies de luwe delen.';
+    else if (rain > 3) advice = 'Nat — neem regenkleding mee de Biesbosch in.';
+    else if (t != null && t >= 18) advice = 'Mooi vaarweer — ideaal om te kanoën of te varen.';
+    else advice = 'Prima om de Biesbosch in te trekken; kleed je op het weer.';
+  } else {
+    title = '🥾 Sallandse Heuvelrug';
+    if (bft >= 6) advice = 'Harde wind — let op vallende takken in het bos.';
+    else if (rain > 3) advice = 'Nat op de heide — stevige schoenen aan.';
+    else if (t != null && t < 4) advice = 'Koud — warm aankleden voor de heide.';
+    else if (t != null && t >= 18 && bft <= 4) advice = 'Heerlijk wandel- en fietsweer op de Heuvelrug.';
+    else advice = 'Goed om de Heuvelrug op te gaan; kleed je op het weer.';
+  }
+  return `<section class="card" id="natureCard"><h2>${title}</h2><div class="nature__advice">${escHtml(advice)}</div></section>`;
+}
+
+/** Lokale extra-secties, alleen wat de gemeente-config aanzet. */
+function renderExtraSections(snap: WeerSnapshot, cfg: MunicipalityConfig): string {
+  const cards: string[] = [];
+  if (cfg.features.tide && snap.tide && snap.tide.next.length >= 2) {
+    cards.push(renderTideCard(snap.tide, cfg));
+  }
+  if (cfg.features.stormSurgeBarrier && snap.tide && snap.tide.next.length >= 1) {
+    cards.push(renderBarrierCard(snap.tide, cfg.features.stormSurgeBarrier));
+  }
+  if (snap.fireRisk) {
+    cards.push(renderFireRiskCard(snap.fireRisk));
+  }
+  if (cfg.features.natureRecreation) {
+    cards.push(renderNatureCard(cfg.features.natureRecreation, snap));
+  }
+  return cards.join('\n');
+}
+
+export function renderDashboard(
+  template: string,
+  snap: WeerSnapshot | null,
+  cfg: MunicipalityConfig,
+): string {
+  let html = template;
+
+  // ── Branding (kleur, logo, naam) ──
+  html = html.split('#F5A624').join(cfg.themeColor);
+  const brand = cfg.logoUrl
+    ? `<img class="topbar__logo" src="${escHtml(cfg.logoUrl)}" alt="${escHtml(cfg.appName)}" loading="lazy" />\n      <span class="topbar__title">Weer · ${escHtml(cfg.name)}</span>`
+    : `<span class="topbar__title">${escHtml(cfg.appName)} · Weer · ${escHtml(cfg.name)}</span>`;
+  html = html.replace(
+    '      <img class="topbar__logo" src="https://www.zeistapp.nl/wp-content/uploads/2025/10/Zeist_logo_tekst-2048x874-1.png" alt="ZeistApp" loading="lazy" />\n      <span class="topbar__title">Weer · Zeist</span>',
+    brand,
+  );
+  html = html.replace('<title>Weer in Zeist</title>', `<title>Weer in ${escHtml(cfg.name)}</title>`);
+  html = html.replace(
+    '<div class="hero__location">📍 Zeist</div>',
+    `<div class="hero__location">📍 ${escHtml(cfg.name)}</div>`,
+  );
+
+  if (!snap) return html.replace('<!--EXTRA_SECTIONS-->', '');
 
   const w = snap.weather?.current;
   const today = snap.weather?.daily?.[0];
 
-  let html = template;
+  // Lokale extra-secties (getij, kering, natuurbrand, natuur)
+  html = html.replace('<!--EXTRA_SECTIONS-->', renderExtraSections(snap, cfg));
 
   // Hero
   if (w) {
@@ -251,21 +441,23 @@ export function renderDashboard(template: string, snap: WeerSnapshot | null): st
   if (w) {
     const t = w.temperature;
     const bft = msToBft(w.windMs).bft;
-    const rain = today ? today.precipitationSum : w.precipitation;
+    // Alleen regen die overdag valt telt mee — nachtregen maakt een
+    // zonnige dag geen "geen weer voor buiten".
+    const rain = today ? today.daytimePrecipSum : w.precipitation;
     let cls = 'verdict--mid';
     let icon = '🌥️';
     let text = 'Matig buitenweer';
-    let subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm verwacht`;
-    if (t >= 20 && bft <= 4 && rain < 1) {
+    let subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm overdag`;
+    if (t >= 18 && bft <= 4 && rain < 1) {
       cls = 'verdict--top';
       icon = '☀️';
       text = 'Top buitenweer!';
       subTxt = `${round(t)}° · Bft ${bft} · droog`;
-    } else if (t < 14 || bft >= 6 || rain > 5) {
+    } else if (t < 12 || bft >= 6 || rain > 5) {
       cls = 'verdict--bad';
       icon = '⛈️';
       text = 'Geen weer voor buiten';
-      subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm`;
+      subTxt = `${round(t)}° · Bft ${bft} · ${round(rain, 1)} mm overdag`;
     }
     html = html.replace(
       '<section class="verdict verdict--mid" id="verdict">',
@@ -372,7 +564,7 @@ export function renderDashboard(template: string, snap: WeerSnapshot | null): st
   }
 
   // Air + pollen
-  const air = renderAir(snap);
+  const air = renderAir(snap, cfg.features.pollenProminent ?? false);
   html = html.replace(
     '<div class="aqi-ball" id="aqiBall">—</div>',
     `<div class="aqi-ball" id="aqiBall" style="background:${air.aqiColor}">${escHtml(air.aqiBall)}</div>`,

@@ -13,6 +13,7 @@ export type IconKey =
   | 'drizzle'
   | 'rain'
   | 'rain-heavy'
+  | 'sun-shower'
   | 'snow'
   | 'sleet'
   | 'thunder';

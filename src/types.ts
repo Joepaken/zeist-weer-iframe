@@ -37,9 +37,17 @@ export interface HourlyEntry {
 
 export interface DailyEntry {
   date: string;
+  /** Ruwe Open-Meteo dagcode (zwaarste conditie van de dag, incl. nacht). */
   weatherCode: number;
+  /** Afgeleid van de daglichturen (zonsopkomst–ondergang), niet van weatherCode. */
   iconKey: IconKey;
   labelNL: string;
+  /** Zonuren overdag, 1 decimaal; null als het model geen zonneschijndata gaf. */
+  sunHours: number | null;
+  /** Neerslag (mm) tussen zonsopkomst en -ondergang. */
+  daytimePrecipSum: number;
+  /** Daglichturen met ≥ 0,1 mm neerslag. */
+  daytimePrecipHours: number;
   tempMax: number;
   tempMin: number;
   precipitationSum: number;
@@ -80,6 +88,24 @@ export interface BuienradarBlock {
   observedAt: string;
 }
 
+export interface TideExtreme {
+  type: 'HW' | 'LW';
+  time: string; // ISO met TZ
+  levelCmNap: number;
+}
+
+export interface TideBlock {
+  station: string;
+  next: TideExtreme[]; // chronologisch, eerstvolgende extremen
+}
+
+export interface FireRiskBlock {
+  level: 1 | 2 | 3 | 4; // 1=laag … 4=zeer hoog
+  label: string; // NL, bv. 'Matig'
+  color: string; // hex voor de badge
+  reasonNL: string; // korte onderbouwing
+}
+
 export interface MetaBlock {
   fetchedAt: string;
   fetchedAtMs: number;
@@ -93,5 +119,9 @@ export interface WeerSnapshot {
   weather: WeatherBlock | null;
   airQuality: AirQualityBlock | null;
   buienradar: BuienradarBlock | null;
+  /** Alleen gevuld bij getij-gemeenten (Barendrecht, Capelle, Almkerk). */
+  tide?: TideBlock | null;
+  /** Alleen gevuld bij gemeenten met natuurbrandrisico (Nijverdal). */
+  fireRisk?: FireRiskBlock | null;
   _meta: MetaBlock;
 }
