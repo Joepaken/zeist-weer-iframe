@@ -5,11 +5,18 @@
  *   - lazy fallback in de routes als de cache leeg/oud zou zijn
  */
 
-import { fetchAirQuality, fetchWeather } from './sources/openMeteo.js';
+import { fetchAirQuality, fetchWeather, fetchMarine } from './sources/openMeteo.js';
 import { fetchBuienradarStation } from './sources/buienradar.js';
 import { fetchTides } from './sources/tides.js';
+import { fetchBeachFlag, computeFlagFromConditions } from './sources/flag.js';
 import { computeFireRisk } from './util/fireRisk.js';
-import type { WeerSnapshot, TideBlock, FireRiskBlock } from './types.js';
+import type {
+  WeerSnapshot,
+  TideBlock,
+  FireRiskBlock,
+  MarineBlock,
+  BeachFlagBlock,
+} from './types.js';
 
 export interface AggregatorConfig {
   lat: number;
@@ -22,6 +29,10 @@ export interface AggregatorConfig {
   tideStation?: string;
   /** Indicatief natuurbrandrisico berekenen. */
   computeFireRisk?: boolean;
+  /** Open-Meteo Marine ophalen; alleen bij kustgemeenten. */
+  marine?: boolean;
+  /** Scrape-URL voor de strandvlag; alleen bij kustgemeenten. */
+  beachFlagUrl?: string;
 }
 
 async function settle<T>(
@@ -46,18 +57,48 @@ export async function aggregate(cfg: AggregatorConfig): Promise<WeerSnapshot> {
   const tideTask: Promise<{ data: TideBlock | null; error: string | null }> = cfg.tideStation
     ? settle('tide', fetchTides(cfg.tideStation))
     : Promise.resolve({ data: null, error: null });
+  const marineTask: Promise<{ data: MarineBlock | null; error: string | null }> = cfg.marine
+    ? settle('marine', fetchMarine(cfg.lat, cfg.lon))
+    : Promise.resolve({ data: null, error: null });
 
-  const [weatherR, airR, brR, tideR] = await Promise.all([
+  const [weatherR, airR, brR, tideR, marineR] = await Promise.all([
     settle('weather', fetchWeather(cfg.lat, cfg.lon, cfg.forecastModel)),
     settle('air-quality', fetchAirQuality(cfg.lat, cfg.lon)),
     settle('buienradar', fetchBuienradarStation(cfg.buienradarStation)),
     tideTask,
+    marineTask,
   ]);
 
   if (weatherR.error) errors.push({ source: 'weather', message: weatherR.error });
   if (airR.error) errors.push({ source: 'air-quality', message: airR.error });
   if (brR.error) errors.push({ source: 'buienradar', message: brR.error });
   if (tideR.error) errors.push({ source: 'tide', message: tideR.error });
+  if (marineR.error) errors.push({ source: 'marine', message: marineR.error });
+
+  // Strandvlag (kust) — vereist wind (weather) + golfhoogte (marine).
+  // Sequentieel ná de bronnen omdat het de live scrape nodig heeft.
+  let flag: BeachFlagBlock | null = null;
+  if (cfg.beachFlagUrl) {
+    const windMs = weatherR.data?.current.windMs ?? 0;
+    const waveH = marineR.data?.waveHeight ?? 0;
+    const flagResult = await settle(
+      'flag',
+      fetchBeachFlag({ url: cfg.beachFlagUrl, windMs, waveHeightM: waveH }),
+    );
+    if (flagResult.data) {
+      flag = flagResult.data;
+    } else {
+      if (flagResult.error) errors.push({ source: 'flag', message: flagResult.error });
+      const computed = computeFlagFromConditions(windMs, waveH);
+      flag = {
+        color: computed.color,
+        source: 'indicatief',
+        description: '',
+        bft: computed.bft,
+        waveHeightM: Math.round(waveH * 100) / 100,
+      };
+    }
+  }
 
   // Natuurbrandrisico (indicatief) uit het weer afleiden.
   let fireRisk: FireRiskBlock | null = null;
@@ -79,6 +120,8 @@ export async function aggregate(cfg: AggregatorConfig): Promise<WeerSnapshot> {
     buienradar: brR.data,
     tide: tideR.data,
     fireRisk,
+    marine: marineR.data,
+    flag,
     _meta: {
       fetchedAt: new Date(fetchedAtMs).toISOString(),
       fetchedAtMs,

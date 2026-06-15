@@ -25,6 +25,8 @@ function cfgFor(m: MunicipalityConfig): AggregatorConfig {
     forecastModel: m.forecastModel,
     tideStation: m.tideStation,
     computeFireRisk: m.features.fireRisk,
+    marine: m.features.marine,
+    beachFlagUrl: m.features.beachFlag?.url,
   };
 }
 
@@ -146,6 +148,8 @@ async function main(): Promise<void> {
             buienradar: !!snap.buienradar,
             tide: !!snap.tide,
             fireRisk: !!snap.fireRisk,
+            marine: !!snap.marine,
+            flag: !!snap.flag,
             errors: snap._meta.errors,
           }
         : null,

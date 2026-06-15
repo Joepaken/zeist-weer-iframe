@@ -17,6 +17,7 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 | `capelle` | Capelle aan den IJssel | getij (Hollandsche IJssel) + Algerakering-info |
 | `nijverdal` | Nijverdal | natuurbrandrisico + Heuvelrug-recreatie + pollen |
 | `almkerk` | Almkerk (Altena) | getij (Nieuwe Merwede/Biesbosch) + Biesbosch-recreatie + pollen |
+| `noordwijk` | Noordwijk aan Zee | kust: strandvlag + getij (Noordzee/Scheveningen) + zee & surf |
 
 ## Endpoints
 
@@ -36,6 +37,7 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 - **Open-Meteo (default model)** — UV-aanvulling (KNMI-model levert geen UV).
 - **Open-Meteo Air Quality** — EU-AQI, PM2.5/10, ozon, NO₂, pollen.
 - **Rijkswaterstaat DDAPI20** — getij (astronomisch, HW/LW) voor getij-gemeenten.
+- **Open-Meteo Marine** + **strandvlag** (reddingsbrigade-scrape, anders indicatief uit wind+golf) — alleen kustgemeenten (Noordwijk).
 - **Buienradar** — lokale Bft, zonkracht, regen-1u (station per gemeente).
 
 ## Nieuwe gemeente toevoegen

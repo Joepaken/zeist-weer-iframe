@@ -13,6 +13,8 @@ import type {
   TideBlock,
   TideExtreme,
   FireRiskBlock,
+  BeachFlagBlock,
+  FlagColor,
 } from './types.js';
 import { msToBft } from './util/beaufort.js';
 import { degToCompass } from './util/windRose.js';
@@ -366,11 +368,74 @@ function renderNatureCard(kind: 'biesbosch' | 'heuvelrug', snap: WeerSnapshot): 
   return `<section class="card" id="natureCard"><h2>${title}</h2><div class="nature__advice">${escHtml(advice)}</div></section>`;
 }
 
+const FLAG_COLORS: Record<FlagColor, string> = {
+  groen: '#2BAE66',
+  geel: '#F5C518',
+  rood: '#D7263D',
+  'dubbel-rood': 'linear-gradient(180deg,#D7263D 0 50%,#9A1B16 50% 100%)',
+  'geen-wacht': 'repeating-linear-gradient(135deg,#fff 0 10px,#1a1a1a 10px 20px)',
+};
+
+const FLAG_TITLES: Record<FlagColor, string> = {
+  groen: 'Groene vlag',
+  geel: 'Gele vlag',
+  rood: 'Rode vlag',
+  'dubbel-rood': 'Dubbele rode vlag',
+  'geen-wacht': 'Geen lifeguard',
+};
+
+function renderFlagCard(f: BeachFlagBlock): string {
+  const bg = FLAG_COLORS[f.color] ?? FLAG_COLORS.groen;
+  const bgStyle = bg.includes('gradient') ? `background:${bg};` : `background-color:${bg};`;
+  const sourceTxt =
+    f.source === 'reddingsbrigade'
+      ? 'Bron: Reddingsbrigade (live)'
+      : 'Bron: indicatief (wind + golfhoogte)';
+  return `<section class="card flag-card" id="flagCard"><div class="flag" style="${bgStyle}"></div><div><div class="flag-info__title">${escHtml(FLAG_TITLES[f.color])}</div><div class="flag-info__desc">${escHtml(f.description)}</div><div class="flag-info__meta">Wind ${f.bft} Bft · golf ${round(f.waveHeightM, 2)} m</div><span class="flag-info__source">${escHtml(sourceTxt)}</span></div></section>`;
+}
+
+function renderSeaGrid(snap: WeerSnapshot): string {
+  const m = snap.marine;
+  const w = snap.weather?.current;
+  const items: Array<{ lbl: string; val: string }> = [];
+  if (m) {
+    items.push({ lbl: 'Watertemp', val: `${round(m.seaSurfaceTemp, 1)}°C` });
+    items.push({ lbl: 'Golfhoogte', val: `${round(m.waveHeight, 2)} m · ${round(m.wavePeriod, 1)} s` });
+    items.push({
+      lbl: 'Deining',
+      val: `${round(m.swellWaveHeight, 2)} m · ${degToCompass(m.swellWaveDirection).short}`,
+    });
+    items.push({
+      lbl: 'Stroming',
+      val: `${round(m.oceanCurrentVelocity, 1)} km/u · ${degToCompass(m.oceanCurrentDirection).short}`,
+    });
+  }
+  if (w?.windGustMs) items.push({ lbl: 'Windvlagen', val: `${round(w.windGustMs * 3.6)} km/u` });
+  if (!items.length) return '<div class="stat__lbl">Geen zee-data beschikbaar</div>';
+  return items
+    .map(
+      (it) =>
+        `<div class="stat"><div class="stat__lbl">${escHtml(it.lbl)}</div><div class="stat__val">${escHtml(it.val)}</div></div>`,
+    )
+    .join('');
+}
+
+function renderSeaCard(snap: WeerSnapshot): string {
+  return `<section class="card" id="seaCard"><h2>🏖️ Zee &amp; surf</h2><div class="sea-grid">${renderSeaGrid(snap)}</div></section>`;
+}
+
 /** Lokale extra-secties, alleen wat de gemeente-config aanzet. */
 function renderExtraSections(snap: WeerSnapshot, cfg: MunicipalityConfig): string {
   const cards: string[] = [];
+  // Kust: strandvlag bovenaan (veiligheid), dan getij, dan zee.
+  if (cfg.features.beachFlag && snap.flag) {
+    cards.push(renderFlagCard(snap.flag));
+  }
   if (cfg.features.tide && snap.tide && snap.tide.next.length >= 2) {
     cards.push(renderTideCard(snap.tide, cfg));
+  }
+  if (cfg.features.marine && snap.marine) {
+    cards.push(renderSeaCard(snap));
   }
   if (cfg.features.stormSurgeBarrier && snap.tide && snap.tide.next.length >= 1) {
     cards.push(renderBarrierCard(snap.tide, cfg.features.stormSurgeBarrier));

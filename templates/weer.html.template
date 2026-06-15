@@ -512,6 +512,18 @@ footer a { color: var(--sea-blue); text-decoration: none; }
 
 /* ─── Pollen-accent ─── */
 .pollen-lead { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+
+/* ─── Strandvlag (kust) ─── */
+.flag-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 16px; }
+.flag { width: 80px; height: 100px; border-radius: 4px; position: relative; flex-shrink: 0; box-shadow: 0 3px 8px rgba(0,0,0,0.18); border: 2px solid rgba(0,0,0,0.08); }
+.flag::before { content: ''; position: absolute; left: -8px; top: -4px; bottom: -10px; width: 4px; background: #6b4f30; border-radius: 2px; }
+.flag-info__title { font-size: 17px; font-weight: 800; color: #2D2D2D; margin-bottom: 2px; }
+.flag-info__desc { font-size: 13px; color: #6B7280; margin-bottom: 6px; }
+.flag-info__meta { font-size: 12px; color: #6B7280; }
+.flag-info__source { display: inline-block; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; padding: 2px 8px; border-radius: 9999px; background: #F4ECE7; color: #355272; margin-top: 6px; font-weight: 700; }
+
+/* ─── Zee & surf (kust) ─── */
+.sea-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 </style>
 </head>
 <body>

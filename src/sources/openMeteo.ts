@@ -1,5 +1,5 @@
 /**
- * Open-Meteo: forecast + air-quality (geen marine voor binnenland).
+ * Open-Meteo: forecast + air-quality + marine (marine alleen voor kust).
  * Geen API-key nodig.
  */
 
@@ -11,10 +11,12 @@ import type {
   HourlyEntry,
   DailyEntry,
   CurrentWeather,
+  MarineBlock,
 } from '../types.js';
 
 const FORECAST_URL = 'https://api.open-meteo.com/v1/forecast';
 const AIR_URL = 'https://air-quality-api.open-meteo.com/v1/air-quality';
+const MARINE_URL = 'https://marine-api.open-meteo.com/v1/marine';
 
 const TIMEOUT_MS = 8000;
 
@@ -280,5 +282,46 @@ export async function fetchAirQuality(lat: number, lon: number): Promise<AirQual
     pollenBirch: c.birch_pollen ?? null,
     pollenAlder: c.alder_pollen ?? null,
     pollenRagweed: c.ragweed_pollen ?? null,
+  };
+}
+
+interface OmMarineResponse {
+  current: {
+    wave_height: number;
+    wave_direction: number;
+    wave_period: number;
+    wind_wave_height: number;
+    swell_wave_height: number;
+    swell_wave_period: number;
+    swell_wave_direction: number;
+    sea_surface_temperature: number;
+    ocean_current_velocity: number;
+    ocean_current_direction: number;
+  };
+}
+
+/** Open-Meteo Marine — alleen voor kustlocaties. */
+export async function fetchMarine(lat: number, lon: number): Promise<MarineBlock> {
+  const url = buildQuery(MARINE_URL, {
+    latitude: lat,
+    longitude: lon,
+    current:
+      'wave_height,wave_direction,wave_period,wind_wave_height,swell_wave_height,swell_wave_period,swell_wave_direction,sea_surface_temperature,ocean_current_velocity,ocean_current_direction',
+    timezone: 'Europe/Amsterdam',
+  });
+
+  const data = await fetchJson<OmMarineResponse>(url, 'open-meteo/marine');
+  const c = data.current;
+  return {
+    seaSurfaceTemp: c.sea_surface_temperature,
+    waveHeight: c.wave_height,
+    wavePeriod: c.wave_period,
+    waveDirection: c.wave_direction,
+    windWaveHeight: c.wind_wave_height,
+    swellWaveHeight: c.swell_wave_height,
+    swellWavePeriod: c.swell_wave_period,
+    swellWaveDirection: c.swell_wave_direction,
+    oceanCurrentVelocity: c.ocean_current_velocity,
+    oceanCurrentDirection: c.ocean_current_direction,
   };
 }
