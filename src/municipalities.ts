@@ -27,6 +27,10 @@ export interface MunicipalityFeatures {
   fireRisk?: boolean;
   /** Pollen/hooikoorts nadrukkelijker tonen. */
   pollenProminent?: boolean;
+  /** Zee & surf-sectie (Open-Meteo Marine) — kustgemeenten. */
+  marine?: boolean;
+  /** Strandvlag met live scrape-URL van de reddingsbrigade. */
+  beachFlag?: { url: string };
 }
 
 export interface MunicipalityConfig {
@@ -137,6 +141,28 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     tideStation: 'werkendam.nieuwemerwede',
     tideWaterName: 'Nieuwe Merwede',
     features: { tide: true, natureRecreation: 'biesbosch', pollenProminent: true },
+  },
+
+  // Kustvariant: dupliceert NoordwijkWeerApp als tenant (zee, getij,
+  // strandvlag). De bestaande Noordwijk-deploy blijft los hiervan draaien.
+  noordwijk: {
+    slug: 'noordwijk',
+    name: 'Noordwijk aan Zee',
+    appName: 'NoordwijkApp',
+    lat: 52.24,
+    lon: 4.43,
+    buienradarStation: 6225,
+    forecastModel: KNMI,
+    logoUrl:
+      'https://www.denoordwijkapp.nl/wp-content/uploads/2025/10/NOORDWIJK_logo_tekst-scaled.png',
+    themeColor: THEME,
+    tideStation: 'scheveningen',
+    tideWaterName: 'Noordzee',
+    features: {
+      tide: true,
+      marine: true,
+      beachFlag: { url: 'https://www.reddingsbrigadenoordwijk.nl/strand/' },
+    },
   },
 };
 

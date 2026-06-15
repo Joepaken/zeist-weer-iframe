@@ -106,6 +106,29 @@ export interface FireRiskBlock {
   reasonNL: string; // korte onderbouwing
 }
 
+export interface MarineBlock {
+  seaSurfaceTemp: number; // °C
+  waveHeight: number; // m
+  wavePeriod: number; // s
+  waveDirection: number; // °
+  windWaveHeight: number; // m
+  swellWaveHeight: number; // m
+  swellWavePeriod: number; // s
+  swellWaveDirection: number; // °
+  oceanCurrentVelocity: number; // km/h
+  oceanCurrentDirection: number; // °
+}
+
+export type FlagColor = 'groen' | 'geel' | 'rood' | 'dubbel-rood' | 'geen-wacht';
+
+export interface BeachFlagBlock {
+  color: FlagColor;
+  source: 'reddingsbrigade' | 'indicatief';
+  description: string; // NL
+  bft: number;
+  waveHeightM: number;
+}
+
 export interface MetaBlock {
   fetchedAt: string;
   fetchedAtMs: number;
@@ -119,9 +142,13 @@ export interface WeerSnapshot {
   weather: WeatherBlock | null;
   airQuality: AirQualityBlock | null;
   buienradar: BuienradarBlock | null;
-  /** Alleen gevuld bij getij-gemeenten (Barendrecht, Capelle, Almkerk). */
+  /** Alleen gevuld bij getij-gemeenten (Barendrecht, Capelle, Almkerk, Noordwijk). */
   tide?: TideBlock | null;
   /** Alleen gevuld bij gemeenten met natuurbrandrisico (Nijverdal). */
   fireRisk?: FireRiskBlock | null;
+  /** Alleen gevuld bij kustgemeenten (Noordwijk). */
+  marine?: MarineBlock | null;
+  /** Strandvlag, alleen bij kustgemeenten (Noordwijk). */
+  flag?: BeachFlagBlock | null;
   _meta: MetaBlock;
 }
