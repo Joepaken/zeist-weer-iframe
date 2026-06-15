@@ -52,7 +52,7 @@ interface OmForecastResponse {
     wind_speed_10m: number;
     wind_direction_10m: number;
     wind_gusts_10m: number;
-    uv_index: number;
+    uv_index: number | null; // null bij KNMI-model
   };
   hourly: {
     time: string[];
@@ -82,7 +82,7 @@ interface OmForecastResponse {
     sunset: string[];
     daylight_duration: number[];
     sunshine_duration?: Array<number | null>;
-    uv_index_max: number[];
+    uv_index_max: Array<number | null>; // null bij KNMI-model
     precipitation_sum: number[];
     precipitation_hours: number[];
     wind_speed_10m_max: number[];
@@ -91,8 +91,12 @@ interface OmForecastResponse {
   };
 }
 
-export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlock> {
-  const url = buildQuery(FORECAST_URL, {
+export async function fetchWeather(
+  lat: number,
+  lon: number,
+  model?: string,
+): Promise<WeatherBlock> {
+  const params: Record<string, string | number> = {
     latitude: lat,
     longitude: lon,
     current:
@@ -104,7 +108,10 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlo
     wind_speed_unit: 'ms',
     timezone: 'Europe/Amsterdam',
     forecast_days: 7,
-  });
+  };
+  // KNMI HARMONIE (knmi_seamless) = hyperlokaal 2,5km voor NL.
+  if (model) params.models = model;
+  const url = buildQuery(FORECAST_URL, params);
 
   const data = await fetchJson<OmForecastResponse>(url, 'open-meteo/forecast');
 
@@ -185,12 +192,57 @@ export async function fetchWeather(lat: number, lon: number): Promise<WeatherBlo
     windMs: c.wind_speed_10m,
     windDir: c.wind_direction_10m,
     windGustMs: c.wind_gusts_10m,
-    uvIndex: c.uv_index,
+    uvIndex: c.uv_index ?? 0,
     visibilityM: data.hourly.visibility[lastIdx] ?? 0,
     dewPoint: data.hourly.dew_point_2m[lastIdx] ?? 0,
   };
 
+  // KNMI-modellen leveren geen UV-index → vul aan vanuit het default-model.
+  const uvMissing = c.uv_index == null || data.daily.uv_index_max.every((v) => v == null);
+  if (uvMissing) {
+    try {
+      const uv = await fetchUvTopup(lat, lon);
+      current.uvIndex = uv.currentUv;
+      for (let i = 0; i < daily.length; i++) {
+        const v = uv.dailyUvMax[i];
+        if (v != null) daily[i]!.uvIndexMax = v;
+      }
+    } catch {
+      /* UV blijft 0 — niet fataal voor de rest van het weer */
+    }
+  }
+
   return { current, hourly, daily };
+}
+
+interface OmUvResponse {
+  hourly?: { time: string[]; uv_index: Array<number | null> };
+  daily?: { uv_index_max: Array<number | null> };
+}
+
+/** UV-index uit het default-model (KNMI levert die niet). */
+async function fetchUvTopup(
+  lat: number,
+  lon: number,
+): Promise<{ currentUv: number; dailyUvMax: Array<number | null> }> {
+  const url = buildQuery(FORECAST_URL, {
+    latitude: lat,
+    longitude: lon,
+    hourly: 'uv_index',
+    daily: 'uv_index_max',
+    timezone: 'Europe/Amsterdam',
+    forecast_days: 7,
+  });
+  const data = await fetchJson<OmUvResponse>(url, 'open-meteo/uv-topup');
+  const times = data.hourly?.time ?? [];
+  const uvs = data.hourly?.uv_index ?? [];
+  const nowMs = Date.now();
+  let idx = times.findIndex((t) => Date.parse(t) >= nowMs);
+  if (idx < 0) idx = 0;
+  return {
+    currentUv: uvs[idx] ?? 0,
+    dailyUvMax: data.daily?.uv_index_max ?? [],
+  };
 }
 
 interface OmAirResponse {

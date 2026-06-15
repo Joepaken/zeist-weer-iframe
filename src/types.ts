@@ -88,6 +88,24 @@ export interface BuienradarBlock {
   observedAt: string;
 }
 
+export interface TideExtreme {
+  type: 'HW' | 'LW';
+  time: string; // ISO met TZ
+  levelCmNap: number;
+}
+
+export interface TideBlock {
+  station: string;
+  next: TideExtreme[]; // chronologisch, eerstvolgende extremen
+}
+
+export interface FireRiskBlock {
+  level: 1 | 2 | 3 | 4; // 1=laag … 4=zeer hoog
+  label: string; // NL, bv. 'Matig'
+  color: string; // hex voor de badge
+  reasonNL: string; // korte onderbouwing
+}
+
 export interface MetaBlock {
   fetchedAt: string;
   fetchedAtMs: number;
@@ -101,5 +119,9 @@ export interface WeerSnapshot {
   weather: WeatherBlock | null;
   airQuality: AirQualityBlock | null;
   buienradar: BuienradarBlock | null;
+  /** Alleen gevuld bij getij-gemeenten (Barendrecht, Capelle, Almkerk). */
+  tide?: TideBlock | null;
+  /** Alleen gevuld bij gemeenten met natuurbrandrisico (Nijverdal). */
+  fireRisk?: FireRiskBlock | null;
   _meta: MetaBlock;
 }
