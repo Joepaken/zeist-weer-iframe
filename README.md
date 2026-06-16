@@ -25,6 +25,7 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 | `waalwijk` | Waalwijk | natuurbrandrisico + Loonse en Drunense Duinen + pollen (data 1:1 met Kaatsheuvel) |
 | `kaatsheuvel` | Kaatsheuvel | idem Waalwijk (1:1 gedeelde data, andere naam) |
 | `oosterhout` | Oosterhout | natuurbrandrisico + Oosterhoutse bossen + pollen |
+| `roosendaal` | Roosendaal | natuurbrandrisico + Landgoed Visdonk + pollen |
 
 ## Endpoints
 
