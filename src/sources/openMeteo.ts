@@ -21,17 +21,32 @@ const MARINE_URL = 'https://marine-api.open-meteo.com/v1/marine';
 const TIMEOUT_MS = 8000;
 
 async function fetchJson<T>(url: string, label: string): Promise<T> {
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) {
-      throw new Error(`${label} HTTP ${res.status}`);
+  // Retry met jitter op 429/5xx: bij veel tenants tegelijk (boot/refresh)
+  // kan Open-Meteo kortstondig rate-limiten. Niet-retryable 4xx faalt direct.
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    let res: Awaited<ReturnType<typeof fetch>> | undefined;
+    try {
+      res = await fetch(url, { signal: controller.signal });
+    } catch (err) {
+      lastErr = err; // netwerk/timeout → retry
+    } finally {
+      clearTimeout(t);
     }
-    return (await res.json()) as T;
-  } finally {
-    clearTimeout(t);
+    if (res) {
+      if (res.ok) return (await res.json()) as T;
+      if (res.status !== 429 && res.status < 500) {
+        throw new Error(`${label} HTTP ${res.status}`); // niet-retryable
+      }
+      lastErr = new Error(`${label} HTTP ${res.status}`);
+    }
+    if (attempt < 3) {
+      await new Promise((r) => setTimeout(r, 400 * attempt + Math.random() * 400));
+    }
   }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
 }
 
 function buildQuery(base: string, params: Record<string, string | number>): string {
