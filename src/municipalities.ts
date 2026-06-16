@@ -332,6 +332,25 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
       pollenProminent: true,
     },
   },
+
+  // West-Brabants binnenland, natuur bij Landgoed Visdonk.
+  roosendaal: {
+    slug: 'roosendaal',
+    name: 'Roosendaal',
+    appName: 'RoosendaalApp',
+    lat: 51.531,
+    lon: 4.465,
+    buienradarStation: 6340, // Woensdrecht
+    forecastModel: KNMI,
+    logoUrl:
+      'https://www.roosendaalapp.nl/wp-content/uploads/2025/10/RoosendaalApp_logo-2048x479-1.png',
+    themeColor: THEME,
+    features: {
+      fireRisk: true,
+      natureRecreation: { profile: 'land', title: '🌲 Landgoed Visdonk', name: 'Landgoed Visdonk' },
+      pollenProminent: true,
+    },
+  },
 };
 
 /** Slug die de root-routes (zonder pad-prefix) bedienen. */
