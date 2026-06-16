@@ -26,6 +26,8 @@ function cfgFor(m: MunicipalityConfig): AggregatorConfig {
     tideStation: m.tideStation,
     computeFireRisk: m.features.fireRisk,
     marine: m.features.marine,
+    marineLat: m.marineLat,
+    marineLon: m.marineLon,
     beachFlagUrl: m.features.beachFlag?.url,
   };
 }

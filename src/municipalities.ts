@@ -41,6 +41,10 @@ export interface MunicipalityConfig {
   appName: string;
   lat: number;
   lon: number;
+  /** Marine/strand-coördinaten los van het weerpunt (default = lat/lon).
+   *  Bv. eilandmidden-weer + kustblokken van de strandkant. */
+  marineLat?: number;
+  marineLon?: number;
   buienradarStation: number;
   /** Open-Meteo model; knmi_seamless = HARMONIE+ECMWF, hyperlokaal NL. */
   forecastModel: string;
@@ -162,6 +166,30 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
       tide: true,
       marine: true,
       beachFlag: { url: 'https://www.reddingsbrigadenoordwijk.nl/strand/' },
+    },
+  },
+
+  // Hybride kust-tenant: weer op Middelharnis (eilandmidden), maar de
+  // kustblokken (strandvlag, getij, zee) van de Ouddorpse Noordzeekust.
+  goeree: {
+    slug: 'goeree',
+    name: 'Goeree-Overflakkee',
+    appName: 'GoereeApp',
+    lat: 51.755,
+    lon: 4.173,
+    marineLat: 51.807, // Ouddorp aan Zee
+    marineLon: 3.873,
+    buienradarStation: 6330, // Hoek van Holland
+    forecastModel: KNMI,
+    logoUrl:
+      'https://www.goereeapp.nl/wp-content/uploads/2025/10/Goeree_logo_tekst-2048x731-1.png',
+    themeColor: THEME,
+    tideStation: 'haringvliet.10',
+    tideWaterName: 'Noordzee',
+    features: {
+      tide: true,
+      marine: true,
+      beachFlag: { url: 'https://www.ouddorpsereddingsbrigade.nl/' },
     },
   },
 };
