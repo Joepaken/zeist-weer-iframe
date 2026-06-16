@@ -21,6 +21,7 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 | `goeree` | Goeree-Overflakkee | hybride: weer Middelharnis + kust van Ouddorp (strandvlag + getij Noordzee + zee & surf) |
 | `dordrecht` | Dordrecht | getij (Beneden Merwede) + Biesbosch-recreatie + pollen |
 | `apeldoorn` | Apeldoorn | natuurbrandrisico + Veluwe-recreatie + pollen |
+| `westland` | Westland | hybride: weer Naaldwijk + kust van Monster/Ter Heijde (strandvlag + getij Noordzee + zee & surf) |
 
 ## Endpoints
 

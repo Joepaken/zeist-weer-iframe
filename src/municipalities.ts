@@ -211,6 +211,30 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     features: { tide: true, natureRecreation: 'biesbosch', pollenProminent: true },
   },
 
+  // Hybride kust-tenant: weer op Naaldwijk (Glazen Stad), maar de
+  // kustblokken van de Westlandse Noordzeekust (Monster/Ter Heijde).
+  westland: {
+    slug: 'westland',
+    name: 'Westland',
+    appName: 'WestlandApp',
+    lat: 51.994,
+    lon: 4.21,
+    marineLat: 52.02, // Monster/Ter Heijde-kust
+    marineLon: 4.16,
+    buienradarStation: 6330, // Hoek van Holland
+    forecastModel: KNMI,
+    logoUrl:
+      'https://www.westlandapp.nl/wp-content/uploads/2025/10/Westland_logo_tekst-2048x584-1.png',
+    themeColor: THEME,
+    tideStation: 'hoekvanholland',
+    tideWaterName: 'Noordzee',
+    features: {
+      tide: true,
+      marine: true,
+      beachFlag: { url: 'https://www.reddingsbrigade.com/strandinformatie/' },
+    },
+  },
+
   // Inland Veluwe-stad: bos & heide, geen getij. Natuurvariant met
   // natuurbrandrisico (zeer relevant op de Veluwe), natuurblok + pollen.
   apeldoorn: {
