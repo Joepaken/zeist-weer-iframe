@@ -31,6 +31,9 @@ export interface AggregatorConfig {
   computeFireRisk?: boolean;
   /** Open-Meteo Marine ophalen; alleen bij kustgemeenten. */
   marine?: boolean;
+  /** Marine-coördinaten los van het weerpunt (default = lat/lon). */
+  marineLat?: number;
+  marineLon?: number;
   /** Scrape-URL voor de strandvlag; alleen bij kustgemeenten. */
   beachFlagUrl?: string;
 }
@@ -58,7 +61,7 @@ export async function aggregate(cfg: AggregatorConfig): Promise<WeerSnapshot> {
     ? settle('tide', fetchTides(cfg.tideStation))
     : Promise.resolve({ data: null, error: null });
   const marineTask: Promise<{ data: MarineBlock | null; error: string | null }> = cfg.marine
-    ? settle('marine', fetchMarine(cfg.lat, cfg.lon))
+    ? settle('marine', fetchMarine(cfg.marineLat ?? cfg.lat, cfg.marineLon ?? cfg.lon))
     : Promise.resolve({ data: null, error: null });
 
   const [weatherR, airR, brR, tideR, marineR] = await Promise.all([
