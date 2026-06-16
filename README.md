@@ -20,6 +20,7 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 | `noordwijk` | Noordwijk aan Zee | kust: strandvlag + getij (Noordzee/Scheveningen) + zee & surf |
 | `goeree` | Goeree-Overflakkee | hybride: weer Middelharnis + kust van Ouddorp (strandvlag + getij Noordzee + zee & surf) |
 | `dordrecht` | Dordrecht | getij (Beneden Merwede) + Biesbosch-recreatie + pollen |
+| `apeldoorn` | Apeldoorn | natuurbrandrisico + Veluwe-recreatie + pollen |
 
 ## Endpoints
 

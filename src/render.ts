@@ -344,7 +344,10 @@ function renderFireRiskCard(fr: FireRiskBlock): string {
   return `<section class="card" id="fireRiskCard"><h2>🔥 Natuurbrandrisico</h2><div class="firerisk"><span class="firerisk__badge" style="background:${fr.color}">${escHtml(fr.label)}</span><span class="firerisk__reason">${escHtml(fr.reasonNL)}</span></div><div class="firerisk__note">Indicatief — afgeleid uit het weer, geen officiële natuurbrandindex.</div></section>`;
 }
 
-function renderNatureCard(kind: 'biesbosch' | 'heuvelrug', snap: WeerSnapshot): string {
+function renderNatureCard(
+  kind: 'biesbosch' | 'heuvelrug' | 'veluwe',
+  snap: WeerSnapshot,
+): string {
   const w = snap.weather?.current;
   const t = w ? w.temperature : null;
   const bft = w ? msToBft(w.windMs).bft : 0;
@@ -358,12 +361,15 @@ function renderNatureCard(kind: 'biesbosch' | 'heuvelrug', snap: WeerSnapshot): 
     else if (t != null && t >= 18) advice = 'Mooi vaarweer — ideaal om te kanoën of te varen.';
     else advice = 'Prima om de Biesbosch in te trekken; kleed je op het weer.';
   } else {
-    title = '🥾 Sallandse Heuvelrug';
+    // Land-profiel (bos/heide): Sallandse Heuvelrug of Veluwe.
+    const isVeluwe = kind === 'veluwe';
+    title = isVeluwe ? '🌲 De Veluwe' : '🥾 Sallandse Heuvelrug';
+    const area = isVeluwe ? 'de Veluwe' : 'de Heuvelrug';
     if (bft >= 6) advice = 'Harde wind — let op vallende takken in het bos.';
     else if (rain > 3) advice = 'Nat op de heide — stevige schoenen aan.';
     else if (t != null && t < 4) advice = 'Koud — warm aankleden voor de heide.';
-    else if (t != null && t >= 18 && bft <= 4) advice = 'Heerlijk wandel- en fietsweer op de Heuvelrug.';
-    else advice = 'Goed om de Heuvelrug op te gaan; kleed je op het weer.';
+    else if (t != null && t >= 18 && bft <= 4) advice = `Heerlijk wandel- en fietsweer op ${area}.`;
+    else advice = `Goed om ${area} op te gaan; kleed je op het weer.`;
   }
   return `<section class="card" id="natureCard"><h2>${title}</h2><div class="nature__advice">${escHtml(advice)}</div></section>`;
 }
