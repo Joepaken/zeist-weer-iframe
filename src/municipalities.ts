@@ -22,7 +22,7 @@ export interface MunicipalityFeatures {
   /** Stormvloedkering-infopaneel, afgeleid uit de getijdata. */
   stormSurgeBarrier?: StormSurgeBarrier;
   /** Natuur-recreatieblok met passend buitenadvies. */
-  natureRecreation?: 'biesbosch' | 'heuvelrug';
+  natureRecreation?: 'biesbosch' | 'heuvelrug' | 'veluwe';
   /** Indicatief natuurbrandrisico (berekend uit het weer). */
   fireRisk?: boolean;
   /** Pollen/hooikoorts nadrukkelijker tonen. */
@@ -209,6 +209,21 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     tideStation: 'dordrecht.oudemaas.benedenmerwede',
     tideWaterName: 'Beneden Merwede',
     features: { tide: true, natureRecreation: 'biesbosch', pollenProminent: true },
+  },
+
+  // Inland Veluwe-stad: bos & heide, geen getij. Natuurvariant met
+  // natuurbrandrisico (zeer relevant op de Veluwe), natuurblok + pollen.
+  apeldoorn: {
+    slug: 'apeldoorn',
+    name: 'Apeldoorn',
+    appName: 'ApeldoornApp',
+    lat: 52.211,
+    lon: 5.969,
+    buienradarStation: 6275, // Deelen (Veluwe-rand)
+    forecastModel: KNMI,
+    logoUrl: 'https://www.apeldoornapp.nl/wp-content/uploads/2025/10/logo_tekst-1-scaled.png',
+    themeColor: THEME,
+    features: { fireRisk: true, natureRecreation: 'veluwe', pollenProminent: true },
   },
 };
 
