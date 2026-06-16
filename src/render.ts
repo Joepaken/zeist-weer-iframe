@@ -18,7 +18,7 @@ import type {
 } from './types.js';
 import { msToBft } from './util/beaufort.js';
 import { degToCompass } from './util/windRose.js';
-import type { MunicipalityConfig, StormSurgeBarrier } from './municipalities.js';
+import type { MunicipalityConfig, StormSurgeBarrier, NatureRecreation } from './municipalities.js';
 
 const ICONS: Record<IconKey, string> = {
   clear:
@@ -344,34 +344,27 @@ function renderFireRiskCard(fr: FireRiskBlock): string {
   return `<section class="card" id="fireRiskCard"><h2>🔥 Natuurbrandrisico</h2><div class="firerisk"><span class="firerisk__badge" style="background:${fr.color}">${escHtml(fr.label)}</span><span class="firerisk__reason">${escHtml(fr.reasonNL)}</span></div><div class="firerisk__note">Indicatief — afgeleid uit het weer, geen officiële natuurbrandindex.</div></section>`;
 }
 
-function renderNatureCard(
-  kind: 'biesbosch' | 'heuvelrug' | 'veluwe',
-  snap: WeerSnapshot,
-): string {
+function renderNatureCard(nat: NatureRecreation, snap: WeerSnapshot): string {
   const w = snap.weather?.current;
   const t = w ? w.temperature : null;
   const bft = w ? msToBft(w.windMs).bft : 0;
   const rain = snap.weather?.daily?.[0]?.daytimePrecipSum ?? 0;
-  let title: string;
+  const n = nat.name;
   let advice: string;
-  if (kind === 'biesbosch') {
-    title = '🛶 De Biesbosch';
+  if (nat.profile === 'water') {
     if (bft >= 5) advice = 'Veel wind — kanoën in de kreken is zwaar; kies de luwe delen.';
-    else if (rain > 3) advice = 'Nat — neem regenkleding mee de Biesbosch in.';
+    else if (rain > 3) advice = `Nat — neem regenkleding mee ${n} in.`;
     else if (t != null && t >= 18) advice = 'Mooi vaarweer — ideaal om te kanoën of te varen.';
-    else advice = 'Prima om de Biesbosch in te trekken; kleed je op het weer.';
+    else advice = `Prima om ${n} in te trekken; kleed je op het weer.`;
   } else {
-    // Land-profiel (bos/heide): Sallandse Heuvelrug of Veluwe.
-    const isVeluwe = kind === 'veluwe';
-    title = isVeluwe ? '🌲 De Veluwe' : '🥾 Sallandse Heuvelrug';
-    const area = isVeluwe ? 'de Veluwe' : 'de Heuvelrug';
+    // Land-profiel (bos/heide/duin) — naamonafhankelijk geformuleerd.
     if (bft >= 6) advice = 'Harde wind — let op vallende takken in het bos.';
-    else if (rain > 3) advice = 'Nat op de heide — stevige schoenen aan.';
-    else if (t != null && t < 4) advice = 'Koud — warm aankleden voor de heide.';
-    else if (t != null && t >= 18 && bft <= 4) advice = `Heerlijk wandel- en fietsweer op ${area}.`;
-    else advice = `Goed om ${area} op te gaan; kleed je op het weer.`;
+    else if (rain > 3) advice = 'Nat terrein — stevige schoenen aan.';
+    else if (t != null && t < 4) advice = 'Koud — warm aankleden.';
+    else if (t != null && t >= 18 && bft <= 4) advice = `Heerlijk wandel- en fietsweer richting ${n}.`;
+    else advice = `Goed om ${n} te verkennen; kleed je op het weer.`;
   }
-  return `<section class="card" id="natureCard"><h2>${title}</h2><div class="nature__advice">${escHtml(advice)}</div></section>`;
+  return `<section class="card" id="natureCard"><h2>${escHtml(nat.title)}</h2><div class="nature__advice">${escHtml(advice)}</div></section>`;
 }
 
 const FLAG_COLORS: Record<FlagColor, string> = {

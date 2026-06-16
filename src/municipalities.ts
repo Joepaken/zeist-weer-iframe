@@ -16,13 +16,22 @@ export interface StormSurgeBarrier {
   infoNL: string;
 }
 
+export interface NatureRecreation {
+  /** 'water' = varen/kanoën (Biesbosch); 'land' = wandelen/fietsen (bos/heide/duin). */
+  profile: 'land' | 'water';
+  /** Kop incl. emoji, bv. '🌲 De Veluwe'. */
+  title: string;
+  /** Naam mét lidwoord voor in adviesteksten, bv. 'de Veluwe'. */
+  name: string;
+}
+
 export interface MunicipalityFeatures {
   /** Eb & vloed-sectie (vereist tideStation). */
   tide?: boolean;
   /** Stormvloedkering-infopaneel, afgeleid uit de getijdata. */
   stormSurgeBarrier?: StormSurgeBarrier;
   /** Natuur-recreatieblok met passend buitenadvies. */
-  natureRecreation?: 'biesbosch' | 'heuvelrug' | 'veluwe';
+  natureRecreation?: NatureRecreation;
   /** Indicatief natuurbrandrisico (berekend uit het weer). */
   fireRisk?: boolean;
   /** Pollen/hooikoorts nadrukkelijker tonen. */
@@ -61,6 +70,25 @@ export interface MunicipalityConfig {
 
 const THEME = '#F5A624';
 const KNMI = 'knmi_seamless';
+
+// Waalwijk en Kaatsheuvel delen 1:1 dezelfde data (Langstraat, grenzend
+// aan de Loonse en Drunense Duinen) — alleen naam/branding verschilt.
+const LANGSTRAAT_SHARED: Omit<MunicipalityConfig, 'slug' | 'name' | 'appName' | 'logoUrl'> = {
+  lat: 51.668,
+  lon: 5.057,
+  buienradarStation: 6350, // Gilze-Rijen
+  forecastModel: KNMI,
+  themeColor: THEME,
+  features: {
+    fireRisk: true,
+    natureRecreation: {
+      profile: 'land',
+      title: '🏜️ Loonse en Drunense Duinen',
+      name: 'de Loonse en Drunense Duinen',
+    },
+    pollenProminent: true,
+  },
+};
 
 export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
   zeist: {
@@ -129,7 +157,11 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     logoUrl: 'https://www.nijverdalapp.nl/wp-content/uploads/2025/10/logo_tekst1-scaled.png',
     themeColor: THEME,
     // Niet-getijde (Regge / Sallandse Heuvelrug) → natuurvariant.
-    features: { fireRisk: true, natureRecreation: 'heuvelrug', pollenProminent: true },
+    features: {
+      fireRisk: true,
+      natureRecreation: { profile: 'land', title: '🥾 Sallandse Heuvelrug', name: 'de Sallandse Heuvelrug' },
+      pollenProminent: true,
+    },
   },
 
   almkerk: {
@@ -144,7 +176,11 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     themeColor: THEME,
     tideStation: 'werkendam.nieuwemerwede',
     tideWaterName: 'Nieuwe Merwede',
-    features: { tide: true, natureRecreation: 'biesbosch', pollenProminent: true },
+    features: {
+      tide: true,
+      natureRecreation: { profile: 'water', title: '🛶 De Biesbosch', name: 'de Biesbosch' },
+      pollenProminent: true,
+    },
   },
 
   // Kustvariant: dupliceert NoordwijkWeerApp als tenant (zee, getij,
@@ -208,7 +244,11 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     themeColor: THEME,
     tideStation: 'dordrecht.oudemaas.benedenmerwede',
     tideWaterName: 'Beneden Merwede',
-    features: { tide: true, natureRecreation: 'biesbosch', pollenProminent: true },
+    features: {
+      tide: true,
+      natureRecreation: { profile: 'water', title: '🛶 De Biesbosch', name: 'de Biesbosch' },
+      pollenProminent: true,
+    },
   },
 
   // Hybride kust-tenant: weer op Naaldwijk (Glazen Stad), maar de
@@ -247,7 +287,50 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     forecastModel: KNMI,
     logoUrl: 'https://www.apeldoornapp.nl/wp-content/uploads/2025/10/logo_tekst-1-scaled.png',
     themeColor: THEME,
-    features: { fireRisk: true, natureRecreation: 'veluwe', pollenProminent: true },
+    features: {
+      fireRisk: true,
+      natureRecreation: { profile: 'land', title: '🌲 De Veluwe', name: 'de Veluwe' },
+      pollenProminent: true,
+    },
+  },
+
+  // Waalwijk + Kaatsheuvel: identieke data (LANGSTRAAT_SHARED), alleen
+  // naam/branding verschilt. Logo's nog te bevestigen → tekst-fallback.
+  waalwijk: {
+    slug: 'waalwijk',
+    name: 'Waalwijk',
+    appName: 'WaalwijkApp',
+    logoUrl: null,
+    ...LANGSTRAAT_SHARED,
+  },
+  kaatsheuvel: {
+    slug: 'kaatsheuvel',
+    name: 'Kaatsheuvel',
+    appName: 'KaatsheuvelApp',
+    logoUrl: null,
+    ...LANGSTRAAT_SHARED,
+  },
+
+  // Oosterhout: zelfstandige data, natuurvariant (Oosterhoutse bossen).
+  oosterhout: {
+    slug: 'oosterhout',
+    name: 'Oosterhout',
+    appName: 'OosterhoutApp',
+    lat: 51.645,
+    lon: 4.86,
+    buienradarStation: 6350, // Gilze-Rijen
+    forecastModel: KNMI,
+    logoUrl: null, // JS-geladen op oosterhoutapp.nl; URL te bevestigen
+    themeColor: THEME,
+    features: {
+      fireRisk: true,
+      natureRecreation: {
+        profile: 'land',
+        title: '🌲 Oosterhoutse bossen',
+        name: 'de Oosterhoutse bossen',
+      },
+      pollenProminent: true,
+    },
   },
 };
 

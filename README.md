@@ -22,6 +22,9 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 | `dordrecht` | Dordrecht | getij (Beneden Merwede) + Biesbosch-recreatie + pollen |
 | `apeldoorn` | Apeldoorn | natuurbrandrisico + Veluwe-recreatie + pollen |
 | `westland` | Westland | hybride: weer Naaldwijk + kust van Monster/Ter Heijde (strandvlag + getij Noordzee + zee & surf) |
+| `waalwijk` | Waalwijk | natuurbrandrisico + Loonse en Drunense Duinen + pollen (data 1:1 met Kaatsheuvel) |
+| `kaatsheuvel` | Kaatsheuvel | idem Waalwijk (1:1 gedeelde data, andere naam) |
+| `oosterhout` | Oosterhout | natuurbrandrisico + Oosterhoutse bossen + pollen |
 
 ## Endpoints
 
