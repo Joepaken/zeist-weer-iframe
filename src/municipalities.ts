@@ -192,6 +192,24 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
       beachFlag: { url: 'https://www.ouddorpsereddingsbrigade.nl/' },
     },
   },
+
+  // Rivier-getijdenstad op het Eiland van Dordrecht, grenzend aan de
+  // Dordtse Biesbosch. Getij + natuurblok + pollen (zoals Almkerk).
+  dordrecht: {
+    slug: 'dordrecht',
+    name: 'Dordrecht',
+    appName: 'DordrechtApp',
+    lat: 51.814,
+    lon: 4.668,
+    buienradarStation: 6344, // Rotterdam
+    forecastModel: KNMI,
+    logoUrl:
+      'https://www.dedordrechtapp.nl/wp-content/uploads/2025/10/dordrecht_logo_tekst-scaled.png',
+    themeColor: THEME,
+    tideStation: 'dordrecht.oudemaas.benedenmerwede',
+    tideWaterName: 'Beneden Merwede',
+    features: { tide: true, natureRecreation: 'biesbosch', pollenProminent: true },
+  },
 };
 
 /** Slug die de root-routes (zonder pad-prefix) bedienen. */
