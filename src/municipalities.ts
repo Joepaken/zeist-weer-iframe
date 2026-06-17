@@ -113,9 +113,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     lon: 4.535,
     buienradarStation: 6344, // Rotterdam
     forecastModel: KNMI,
-    // Logo wordt op barendrechtapp.nl via JS geladen — URL te bevestigen;
-    // null = tekst-wordmark zolang de echte URL ontbreekt.
-    logoUrl: null,
+    logoUrl: 'https://www.barendrechtapp.nl/wp-content/uploads/2025/10/BarendrechtLr.png',
     themeColor: THEME,
     tideStation: 'heinenoord.goidschalxoord',
     tideWaterName: 'Oude Maas',
@@ -300,14 +298,14 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     slug: 'waalwijk',
     name: 'Waalwijk',
     appName: 'WaalwijkApp',
-    logoUrl: null,
+    logoUrl: 'https://www.waalwijk.app/wp-content/uploads/2025/10/WaalwijkApp-logo.png',
     ...LANGSTRAAT_SHARED,
   },
   kaatsheuvel: {
     slug: 'kaatsheuvel',
     name: 'Kaatsheuvel',
     appName: 'KaatsheuvelApp',
-    logoUrl: null,
+    logoUrl: 'https://www.kaatsheuvel.app/wp-content/uploads/2025/10/Kaatsheuvel_Logo.png',
     ...LANGSTRAAT_SHARED,
   },
 
@@ -320,7 +318,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     lon: 4.86,
     buienradarStation: 6350, // Gilze-Rijen
     forecastModel: KNMI,
-    logoUrl: null, // JS-geladen op oosterhoutapp.nl; URL te bevestigen
+    logoUrl: 'https://www.oosterhoutapp.nl/wp-content/uploads/2025/11/O1.png',
     themeColor: THEME,
     features: {
       fireRisk: true,
