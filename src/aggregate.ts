@@ -8,7 +8,7 @@
 import { fetchAirQuality, fetchWeather, fetchMarine } from './sources/openMeteo.js';
 import { fetchBuienradarStation } from './sources/buienradar.js';
 import { fetchTides } from './sources/tides.js';
-import { fetchBeachFlag, computeFlagFromConditions } from './sources/flag.js';
+import { getBeachFlag } from './sources/flag.js';
 import { computeFireRisk } from './util/fireRisk.js';
 import type {
   WeerSnapshot,
@@ -34,8 +34,8 @@ export interface AggregatorConfig {
   /** Marine-coördinaten los van het weerpunt (default = lat/lon). */
   marineLat?: number;
   marineLon?: number;
-  /** Scrape-URL voor de strandvlag; alleen bij kustgemeenten. */
-  beachFlagUrl?: string;
+  /** Indicatieve strandvlag tonen; alleen bij kustgemeenten. */
+  beachFlag?: boolean;
 }
 
 async function settle<T>(
@@ -78,29 +78,10 @@ export async function aggregate(cfg: AggregatorConfig): Promise<WeerSnapshot> {
   if (tideR.error) errors.push({ source: 'tide', message: tideR.error });
   if (marineR.error) errors.push({ source: 'marine', message: marineR.error });
 
-  // Strandvlag (kust) — vereist wind (weather) + golfhoogte (marine).
-  // Sequentieel ná de bronnen omdat het de live scrape nodig heeft.
+  // Strandvlag (kust) — indicatief uit wind (weather) + golfhoogte (marine).
   let flag: BeachFlagBlock | null = null;
-  if (cfg.beachFlagUrl) {
-    const windMs = weatherR.data?.current.windMs ?? 0;
-    const waveH = marineR.data?.waveHeight ?? 0;
-    const flagResult = await settle(
-      'flag',
-      fetchBeachFlag({ url: cfg.beachFlagUrl, windMs, waveHeightM: waveH }),
-    );
-    if (flagResult.data) {
-      flag = flagResult.data;
-    } else {
-      if (flagResult.error) errors.push({ source: 'flag', message: flagResult.error });
-      const computed = computeFlagFromConditions(windMs, waveH);
-      flag = {
-        color: computed.color,
-        source: 'indicatief',
-        description: '',
-        bft: computed.bft,
-        waveHeightM: Math.round(waveH * 100) / 100,
-      };
-    }
+  if (cfg.beachFlag && weatherR.data) {
+    flag = getBeachFlag(weatherR.data.current.windMs, marineR.data?.waveHeight ?? 0);
   }
 
   // Natuurbrandrisico (indicatief) uit het weer afleiden.
