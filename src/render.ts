@@ -574,6 +574,8 @@ export function renderDashboard(
       '<span class="wind__rating" id="windRating" hidden></span>',
       `<span class="wind__rating" id="windRating" style="background:${ratingBg}">${escHtml(ratingTxt)}</span>`,
     );
+    // Rode pijl wijst naar de richting waar de wind VANDAAN komt (windDir),
+    // passend bij de "Uit het …"-tekst. Rotatie om het kompas-midden (50,50).
     html = html.replace(
       '<g class="compass__arrow" id="windArrow">',
       `<g class="compass__arrow" id="windArrow" transform="rotate(${round(w.windDir, 1)} 50 50)">`,
