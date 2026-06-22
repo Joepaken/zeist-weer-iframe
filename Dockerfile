@@ -19,4 +19,7 @@ ENV TZ=Europe/Amsterdam
 
 EXPOSE 3000
 
+# Niet als root draaien (node:alpine bevat de 'node'-user).
+USER node
+
 CMD ["node", "dist/server.js"]

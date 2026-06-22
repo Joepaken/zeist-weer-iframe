@@ -12,9 +12,61 @@ import {
   DEFAULT_SLUG,
   type MunicipalityConfig,
 } from './municipalities.js';
+import type { WeerSnapshot } from './types.js';
 
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const REFRESH_INTERVAL_MS = parseInt(process.env.REFRESH_INTERVAL_MS || '600000', 10);
+
+// Security-headers. De widget is bedoeld om embed te worden, dus GEEN
+// X-Frame-Options/DENY; framing wordt expliciet toegestaan via CSP.
+// 0 client-side scripts → script-src valt op default-src 'none' (geen JS).
+const CSP = [
+  "default-src 'none'",
+  'img-src https: data:', // externe gemeente-logo's (https)
+  "style-src 'unsafe-inline' https://fonts.googleapis.com", // inline + Google Fonts CSS
+  'font-src https://fonts.gstatic.com',
+  'frame-ancestors *', // embeddable widget — bewust open
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ');
+
+function securityHeaders(
+  _req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+): void {
+  res.set('X-Content-Type-Options', 'nosniff');
+  res.set('Referrer-Policy', 'no-referrer');
+  res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.set('Content-Security-Policy', CSP);
+  next();
+}
+
+// Lichte in-memory rate-limit (fixed window) — alleen als flood-backstop.
+// Ruim gezet zodat legitiem (CGNAT/mobiel) verkeer niet wordt geraakt.
+const RL_WINDOW_MS = 60_000;
+const RL_MAX = 1200; // per IP per minuut
+const rlHits = new Map<string, { count: number; resetAt: number }>();
+function rateLimit(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+): void {
+  const ip = req.ip ?? 'unknown';
+  const now = Date.now();
+  let e = rlHits.get(ip);
+  if (!e || now > e.resetAt) {
+    e = { count: 0, resetAt: now + RL_WINDOW_MS };
+    rlHits.set(ip, e);
+  }
+  e.count += 1;
+  if (e.count > RL_MAX) {
+    res.set('Retry-After', String(Math.ceil((e.resetAt - now) / 1000)));
+    res.status(429).json({ error: 'rate-limited' });
+    return;
+  }
+  next();
+}
 
 function cfgFor(m: MunicipalityConfig): AggregatorConfig {
   return {
@@ -61,27 +113,51 @@ async function refreshAll(reason: string): Promise<void> {
   await Promise.all(allMunicipalities().map((m) => refreshOne(m, reason)));
 }
 
-/** Cache-hit of lazy aggregate als de cache leeg/oud is. */
-async function getSnap(m: MunicipalityConfig) {
+// Eén gecoalesceerde aggregate per slug: bij gelijktijdige requests op het
+// staleness-randje wordt niet N keer (en dus niet N× upstream) gefetcht.
+const inFlight = new Map<string, Promise<WeerSnapshot | null>>();
+
+/** Cache-hit, of één gedeelde lazy aggregate als de cache leeg/oud is. */
+async function getSnap(m: MunicipalityConfig): Promise<WeerSnapshot | null> {
   const cache = getCache(m.slug);
-  if (!cache.get() || cache.isStale()) {
-    try {
-      cache.set(await aggregate(cfgFor(m)));
-    } catch (err) {
-      console.error(`[getSnap] ${m.slug} aggregate error:`, err);
-    }
+  const cached = cache.get();
+  if (cached && !cache.isStale()) return cached;
+
+  let p = inFlight.get(m.slug);
+  if (!p) {
+    p = aggregate(cfgFor(m))
+      .then((snap): WeerSnapshot | null => {
+        cache.set(snap);
+        return snap;
+      })
+      .catch((err): WeerSnapshot | null => {
+        console.error(`[getSnap] ${m.slug} aggregate error:`, err);
+        return cache.get();
+      })
+      .finally(() => {
+        inFlight.delete(m.slug);
+      });
+    inFlight.set(m.slug, p);
   }
-  return cache.get();
+  return p;
 }
 
 async function main(): Promise<void> {
   const app = express();
   app.disable('x-powered-by');
+  app.set('trust proxy', true); // achter de Railway-proxy → echte client-IP
+  app.use(securityHeaders);
+  app.use(rateLimit);
 
   refreshAll('boot').catch((err) => console.error('[refresh] boot', err));
   setInterval(() => {
     refreshAll('interval').catch((err) => console.error('[refresh] interval', err));
   }, REFRESH_INTERVAL_MS);
+  // Verlopen rate-limit-entries opruimen (map blijft begrensd).
+  setInterval(() => {
+    const now = Date.now();
+    for (const [ip, e] of rlHits) if (now > e.resetAt) rlHits.delete(ip);
+  }, RL_WINDOW_MS);
 
   const sendJson = async (m: MunicipalityConfig, res: express.Response): Promise<void> => {
     try {
@@ -152,7 +228,8 @@ async function main(): Promise<void> {
             fireRisk: !!snap.fireRisk,
             marine: !!snap.marine,
             flag: !!snap.flag,
-            errors: snap._meta.errors,
+            // alleen bron-namen, geen upstream-foutdetails
+            errors: snap._meta.errors.map((e) => e.source),
           }
         : null,
     });
