@@ -38,8 +38,8 @@ export interface MunicipalityFeatures {
   pollenProminent?: boolean;
   /** Zee & surf-sectie (Open-Meteo Marine) — kustgemeenten. */
   marine?: boolean;
-  /** Strandvlag met live scrape-URL van de reddingsbrigade. */
-  beachFlag?: { url: string };
+  /** Indicatieve strandvlag (uit wind + golfhoogte). */
+  beachFlag?: boolean;
 }
 
 export interface MunicipalityConfig {
@@ -199,7 +199,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     features: {
       tide: true,
       marine: true,
-      beachFlag: { url: 'https://www.reddingsbrigadenoordwijk.nl/strand/' },
+      beachFlag: true,
     },
   },
 
@@ -223,7 +223,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     features: {
       tide: true,
       marine: true,
-      beachFlag: { url: 'https://www.ouddorpsereddingsbrigade.nl/' },
+      beachFlag: true,
     },
   },
 
@@ -269,7 +269,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     features: {
       tide: true,
       marine: true,
-      beachFlag: { url: 'https://www.reddingsbrigade.com/strandinformatie/' },
+      beachFlag: true,
     },
   },
 
