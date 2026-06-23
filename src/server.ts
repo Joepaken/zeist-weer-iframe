@@ -101,9 +101,30 @@ async function readTemplate(): Promise<string> {
   return cachedTemplate;
 }
 
+/**
+ * Een mislukte bron mag eerder opgehaalde goede data niet wissen. Bij een
+ * tijdelijke upstream-hapering (bv. rate-limit op de forecast-host) houden we
+ * per bron de vorige waarde aan i.p.v. een lege widget te tonen.
+ */
+function withPrev(slug: string, snap: WeerSnapshot): WeerSnapshot {
+  const prev = getCache(slug).get();
+  if (!prev) return snap;
+  if (!snap.weather && prev.weather) {
+    snap.weather = prev.weather;
+    // flag/fireRisk zijn afgeleid van het weer → herstel ze mee.
+    if (!snap.flag && prev.flag) snap.flag = prev.flag;
+    if (!snap.fireRisk && prev.fireRisk) snap.fireRisk = prev.fireRisk;
+  }
+  if (!snap.airQuality && prev.airQuality) snap.airQuality = prev.airQuality;
+  if (!snap.buienradar && prev.buienradar) snap.buienradar = prev.buienradar;
+  if (!snap.tide && prev.tide) snap.tide = prev.tide;
+  if (!snap.marine && prev.marine) snap.marine = prev.marine;
+  return snap;
+}
+
 async function refreshOne(m: MunicipalityConfig, reason: string): Promise<void> {
   try {
-    const snap = await aggregate(cfgFor(m));
+    const snap = withPrev(m.slug, await aggregate(cfgFor(m)));
     getCache(m.slug).set(snap);
     const errCount = snap._meta.errors.length;
     console.log(
@@ -115,8 +136,15 @@ async function refreshOne(m: MunicipalityConfig, reason: string): Promise<void> 
   }
 }
 
+// Niet alle tenants tegelijk verversen: een burst van 14× (forecast +
+// UV-aanvulcall = 28 calls) rate-limit Open-Meteo's forecast-host, waardoor
+// álle weer-fetches op de boot/refresh faalden. Max 2 tenants tegelijk.
 async function refreshAll(reason: string): Promise<void> {
-  await Promise.all(allMunicipalities().map((m) => refreshOne(m, reason)));
+  const all = allMunicipalities();
+  const CONCURRENCY = 2;
+  for (let i = 0; i < all.length; i += CONCURRENCY) {
+    await Promise.all(all.slice(i, i + CONCURRENCY).map((m) => refreshOne(m, reason)));
+  }
 }
 
 // Eén gecoalesceerde aggregate per slug: bij gelijktijdige requests op het
@@ -133,8 +161,9 @@ async function getSnap(m: MunicipalityConfig): Promise<WeerSnapshot | null> {
   if (!p) {
     p = aggregate(cfgFor(m))
       .then((snap): WeerSnapshot | null => {
-        cache.set(snap);
-        return snap;
+        const merged = withPrev(m.slug, snap);
+        cache.set(merged);
+        return merged;
       })
       .catch((err): WeerSnapshot | null => {
         console.error(`[getSnap] ${m.slug} aggregate error:`, err);

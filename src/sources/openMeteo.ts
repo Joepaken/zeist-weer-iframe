@@ -23,8 +23,9 @@ const TIMEOUT_MS = 8000;
 async function fetchJson<T>(url: string, label: string): Promise<T> {
   // Retry met jitter op 429/5xx: bij veel tenants tegelijk (boot/refresh)
   // kan Open-Meteo kortstondig rate-limiten. Niet-retryable 4xx faalt direct.
+  const MAX_ATTEMPTS = 5;
   let lastErr: unknown;
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const controller = new AbortController();
     const t = setTimeout(() => controller.abort(), TIMEOUT_MS);
     let res: Awaited<ReturnType<typeof fetch>> | undefined;
@@ -42,7 +43,7 @@ async function fetchJson<T>(url: string, label: string): Promise<T> {
       }
       lastErr = new Error(`${label} HTTP ${res.status}`);
     }
-    if (attempt < 3) {
+    if (attempt < MAX_ATTEMPTS) {
       await new Promise((r) => setTimeout(r, 400 * attempt + Math.random() * 400));
     }
   }
