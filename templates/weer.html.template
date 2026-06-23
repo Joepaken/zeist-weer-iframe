@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="{{htmlLang}}">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -556,7 +556,7 @@ footer a { color: var(--sea-blue); text-decoration: none; }
   <!-- ─── 3. Buitenweer verdict ─── -->
   <section class="verdict verdict--mid" id="verdict">
     <span class="verdict__icon" id="verdictIcon">🌥️</span>
-    <span id="verdictText">Buitenweer wordt geladen…</span>
+    <span id="verdictText">{{loading}}</span>
     <span class="verdict__sub" id="verdictSub"></span>
   </section>
 
@@ -565,15 +565,15 @@ footer a { color: var(--sea-blue); text-decoration: none; }
 
   <!-- ─── 5. Wind ─── -->
   <section class="card">
-    <h2>💨 Wind</h2>
+    <h2>{{windTitle}}</h2>
     <div class="wind">
       <div class="compass">
         <svg viewBox="0 0 100 100" aria-hidden="true">
           <circle cx="50" cy="50" r="46" fill="#EEF5FC" stroke="#4C76BA" stroke-width="2"/>
-          <text x="50" y="14" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">N</text>
-          <text x="86" y="53" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">O</text>
-          <text x="50" y="92" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">Z</text>
-          <text x="14" y="53" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">W</text>
+          <text x="50" y="14" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">{{compassN}}</text>
+          <text x="86" y="53" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">{{compassE}}</text>
+          <text x="50" y="92" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">{{compassS}}</text>
+          <text x="14" y="53" text-anchor="middle" font-size="9" font-weight="800" fill="#355272">{{compassW}}</text>
           <g class="compass__arrow" id="windArrow">
             <polygon points="50,22 56,52 50,46 44,52" fill="#E84313"/>
             <polygon points="50,78 56,48 50,54 44,48" fill="#84A09F"/>
@@ -591,36 +591,36 @@ footer a { color: var(--sea-blue); text-decoration: none; }
 
   <!-- ─── 8. Sun / UV ─── -->
   <section class="card">
-    <h2>☀️ Zon &amp; UV</h2>
+    <h2>{{sunTitle}}</h2>
     <div class="sun-row">
-      <div class="stat"><div class="stat__lbl">Op</div><div class="stat__val" id="sunRise">—</div></div>
-      <div class="stat"><div class="stat__lbl">Onder</div><div class="stat__val" id="sunSet">—</div></div>
-      <div class="stat"><div class="stat__lbl">Daglengte</div><div class="stat__val" id="sunDur">—</div></div>
+      <div class="stat"><div class="stat__lbl">{{sunRise}}</div><div class="stat__val" id="sunRise">—</div></div>
+      <div class="stat"><div class="stat__lbl">{{sunSet}}</div><div class="stat__val" id="sunSet">—</div></div>
+      <div class="stat"><div class="stat__lbl">{{sunDaylen}}</div><div class="stat__val" id="sunDur">—</div></div>
     </div>
     <div class="uv-bar"><div class="uv-needle" id="uvNeedle" style="left:0%"></div></div>
-    <div class="uv-meta"><span>UV-index nu: <strong id="uvNow">—</strong></span><span>Max vandaag: <strong id="uvMax">—</strong></span></div>
+    <div class="uv-meta"><span>{{uvNow}} <strong id="uvNow">—</strong></span><span>{{uvMax}} <strong id="uvMax">—</strong></span></div>
     <div class="uv-advice" id="uvAdvice"></div>
   </section>
 
   <!-- ─── 9. Hourly forecast ─── -->
   <section class="card">
-    <h2>🕐 Komende 24 uur</h2>
+    <h2>{{hourlyTitle}}</h2>
     <div class="hourly" id="hourly"></div>
   </section>
 
   <!-- ─── 10. 7-day forecast ─── -->
   <section class="card">
-    <h2>📅 7 dagen vooruit</h2>
+    <h2>{{dailyTitle}}</h2>
     <div class="daily" id="daily"></div>
   </section>
 
   <!-- ─── 11. Air quality + pollen ─── -->
   <section class="card" id="airCard">
-    <h2>🌬️ Lucht &amp; pollen</h2>
+    <h2>{{airTitle}}</h2>
     <div class="aqi">
       <div class="aqi-ball" id="aqiBall">—</div>
       <div>
-        <div class="aqi-info__lbl">Europese AQI</div>
+        <div class="aqi-info__lbl">{{euAqi}}</div>
         <div class="aqi-info__rank" id="aqiRank">—</div>
       </div>
     </div>
@@ -630,15 +630,15 @@ footer a { color: var(--sea-blue); text-decoration: none; }
 
   <!-- ─── 12. Detail strip ─── -->
   <section class="card">
-    <h2>📊 Details</h2>
+    <h2>{{detailsTitle}}</h2>
     <div class="detail-grid" id="detailGrid"></div>
   </section>
 
   <!-- ─── 13. Footer ─── -->
   <footer>
-    Bronnen: <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> ·
+    {{footerSources}} <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a> ·
     <a href="https://www.buienradar.nl" target="_blank" rel="noopener">Buienradar</a>
-    <div style="margin-top:4px;opacity:0.6">Vernieuwt elke 10 minuten</div>
+    <div style="margin-top:4px;opacity:0.6">{{footerRefresh}}</div>
   </footer>
 
 </main>
