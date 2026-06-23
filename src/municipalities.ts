@@ -65,6 +65,8 @@ export interface MunicipalityConfig {
   tideStation?: string;
   /** Naam van het water bij de getij-sectie, bv. 'Oude Maas'. */
   tideWaterName?: string;
+  /** Niet-NL talen aanzetten (EN/DE/PL) via /<slug>/<lang>/weer.html. */
+  i18n?: boolean;
   features: MunicipalityFeatures;
 }
 
@@ -196,6 +198,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     themeColor: THEME,
     tideStation: 'scheveningen',
     tideWaterName: 'Noordzee',
+    i18n: true, // EN/DE/PL beschikbaar (badplaats, veel buitenlandse bezoekers)
     features: {
       tide: true,
       marine: true,

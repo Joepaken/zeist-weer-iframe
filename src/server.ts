@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { aggregate, getCache, type AggregatorConfig } from './aggregate.js';
 import { renderDashboard } from './render.js';
+import { isLang, DEFAULT_LANG, type Lang } from './i18n.js';
 import {
   MUNICIPALITIES,
   getMunicipality,
@@ -177,11 +178,15 @@ async function main(): Promise<void> {
     }
   };
 
-  const sendHtml = async (m: MunicipalityConfig, res: express.Response): Promise<void> => {
+  const sendHtml = async (
+    m: MunicipalityConfig,
+    res: express.Response,
+    lang: Lang = DEFAULT_LANG,
+  ): Promise<void> => {
     try {
       const tpl = await readTemplate();
       const snap = await getSnap(m);
-      const html = renderDashboard(tpl, snap ?? null, m);
+      const html = renderDashboard(tpl, snap ?? null, m, lang);
       res.set('Content-Type', 'text/html; charset=utf-8');
       res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.set('Pragma', 'no-cache');
@@ -210,6 +215,26 @@ async function main(): Promise<void> {
       return;
     }
     void sendHtml(m, res);
+  });
+
+  // Vertaalde variant: /<slug>/<lang>/weer.html (EN/DE/PL). NL blijft op de
+  // 2-segment route hierboven. Alleen aan voor gemeenten met i18n: true.
+  app.get('/:slug/:lang/weer.html', (req, res) => {
+    const m = getMunicipality(req.params.slug);
+    if (!m) {
+      res.status(404).send('Onbekende gemeente');
+      return;
+    }
+    const lang = req.params.lang;
+    if (!isLang(lang)) {
+      res.status(404).send('Onbekende taal');
+      return;
+    }
+    if (lang !== DEFAULT_LANG && !m.i18n) {
+      res.status(404).send('Taal niet beschikbaar voor deze gemeente');
+      return;
+    }
+    void sendHtml(m, res, lang);
   });
 
   app.get('/:slug/health', (req, res) => {
