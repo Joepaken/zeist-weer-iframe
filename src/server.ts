@@ -17,15 +17,20 @@ import type { WeerSnapshot } from './types.js';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const REFRESH_INTERVAL_MS = parseInt(process.env.REFRESH_INTERVAL_MS || '600000', 10);
 
-// Security-headers. De widget is bedoeld om embed te worden, dus GEEN
-// X-Frame-Options/DENY; framing wordt expliciet toegestaan via CSP.
+// Security-headers. De widget is bedoeld om overal embed te worden (ook in
+// app-WebViews met een null/file-origin als ouder), dus framing is volledig
+// onbeperkt: GEEN X-Frame-Options én GEEN frame-ancestors. `frame-ancestors *`
+// matcht een null-origin namelijk NIET → dat gaf een wit vlak in de WebView.
 // 0 client-side scripts → script-src valt op default-src 'none' (geen JS).
 const CSP = [
   "default-src 'none'",
   'img-src https: data:', // externe gemeente-logo's (https)
   "style-src 'unsafe-inline' https://fonts.googleapis.com", // inline + Google Fonts CSS
   'font-src https://fonts.gstatic.com',
-  'frame-ancestors *', // embeddable widget — bewust open
+  // GEEN frame-ancestors: een app-WebView gebruikt een null/file-origin als
+  // ouderpagina, en `frame-ancestors *` matcht een null-origin NIET → wit vlak.
+  // Zonder de directive (en zonder X-Frame-Options) is framing onbeperkt,
+  // net als de oude losse apps die wél in de WebView werken.
   "base-uri 'none'",
   "form-action 'none'",
 ].join('; ');
