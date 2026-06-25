@@ -246,8 +246,8 @@ async function main(): Promise<void> {
     void sendHtml(m, res);
   });
 
-  // Vertaalde variant: /<slug>/<lang>/weer.html (EN/DE/PL). NL blijft op de
-  // 2-segment route hierboven. Alleen aan voor gemeenten met i18n: true.
+  // Vertaalde variant: /<slug>/<lang>/weer.html. NL blijft op de 2-segment
+  // route hierboven. Per gemeente bepaalt `langs` welke talen aan staan.
   app.get('/:slug/:lang/weer.html', (req, res) => {
     const m = getMunicipality(req.params.slug);
     if (!m) {
@@ -259,7 +259,7 @@ async function main(): Promise<void> {
       res.status(404).send('Onbekende taal');
       return;
     }
-    if (lang !== DEFAULT_LANG && !m.i18n) {
+    if (lang !== DEFAULT_LANG && !m.langs?.includes(lang)) {
       res.status(404).send('Taal niet beschikbaar voor deze gemeente');
       return;
     }
