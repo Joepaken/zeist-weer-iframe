@@ -7,6 +7,8 @@
  * één entry hieronder + (bij getij) een geverifieerde RWS-stationcode.
  */
 
+import type { Lang } from './i18n.js';
+
 export interface StormSurgeBarrier {
   /** Naam van de kering, bv. 'Algerakering'. */
   name: string;
@@ -65,8 +67,9 @@ export interface MunicipalityConfig {
   tideStation?: string;
   /** Naam van het water bij de getij-sectie, bv. 'Oude Maas'. */
   tideWaterName?: string;
-  /** Niet-NL talen aanzetten (EN/DE/PL) via /<slug>/<lang>/weer.html. */
-  i18n?: boolean;
+  /** Extra talen via /<slug>/<lang>/weer.html (naast NL). Bv. ['en','de','fr'].
+   *  Per gemeente verschillend: kies de talen die bij het publiek passen. */
+  langs?: Lang[];
   features: MunicipalityFeatures;
 }
 
@@ -198,7 +201,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     themeColor: THEME,
     tideStation: 'scheveningen',
     tideWaterName: 'Noordzee',
-    i18n: true, // EN/DE/PL beschikbaar (badplaats, veel buitenlandse bezoekers)
+    langs: ['en', 'de', 'pl'], // badplaats: veel Duitse toeristen, Poolse werknemers, Engelstaligen
     features: {
       tide: true,
       marine: true,
@@ -223,6 +226,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     themeColor: THEME,
     tideStation: 'haringvliet.10',
     tideWaterName: 'Noordzee',
+    langs: ['en', 'de', 'fr'], // kustrecreatie: Engels, Duits en Frans
     features: {
       tide: true,
       marine: true,
