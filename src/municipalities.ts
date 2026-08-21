@@ -356,6 +356,32 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
       pollenProminent: true,
     },
   },
+
+  // Het Gooi: Bussum, Naarden, Muiden en Muiderberg. Weerpunt op Bussum
+  // (grootste kern). Geen getij (IJmeer/Gooimeer ligt achter de Afsluitdijk),
+  // wel bos en heide van het Goois Natuurreservaat → natuurvariant met
+  // natuurbrandrisico + natuurblok + pollen.
+  'gooise-meren': {
+    slug: 'gooise-meren',
+    name: 'Gooise Meren',
+    appName: 'GooiseMerenApp',
+    lat: 52.273,
+    lon: 5.161,
+    buienradarStation: 6260, // De Bilt (dichtstbijzijnde station met Bft/zon/regen)
+    forecastModel: KNMI,
+    logoUrl:
+      'https://www.gooisemerenapp.nl/wp-content/uploads/2025/10/logo_tekst-1-2048x454.png',
+    themeColor: THEME,
+    features: {
+      fireRisk: true,
+      natureRecreation: {
+        profile: 'land',
+        title: '🌲 Goois Natuurreservaat',
+        name: 'het Goois Natuurreservaat',
+      },
+      pollenProminent: true,
+    },
+  },
 };
 
 /** Slug die de root-routes (zonder pad-prefix) bedienen. */
