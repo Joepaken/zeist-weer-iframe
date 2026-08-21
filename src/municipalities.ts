@@ -167,6 +167,26 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
     },
   },
 
+  // Buurgemeente van Nijverdal aan de Sallandse Heuvelrug (de Holterberg):
+  // bos & heide, geen getij. Natuurvariant met natuurbrandrisico + natuurblok
+  // + pollen. Logo nog te bevestigen → tekst-fallback.
+  'rijssen-holten': {
+    slug: 'rijssen-holten',
+    name: 'Rijssen-Holten',
+    appName: 'RijssenHoltenApp',
+    lat: 52.306,
+    lon: 6.517,
+    buienradarStation: 6278, // Heino (zelfde als buur Nijverdal)
+    forecastModel: KNMI,
+    logoUrl: null,
+    themeColor: THEME,
+    features: {
+      fireRisk: true,
+      natureRecreation: { profile: 'land', title: '🌲 De Holterberg', name: 'de Holterberg' },
+      pollenProminent: true,
+    },
+  },
+
   almkerk: {
     slug: 'almkerk',
     name: 'Almkerk',
@@ -206,6 +226,7 @@ export const MUNICIPALITIES: Record<string, MunicipalityConfig> = {
       tide: true,
       marine: true,
       beachFlag: true,
+      fireRisk: true,
     },
   },
 

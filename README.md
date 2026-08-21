@@ -16,6 +16,7 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 | `barendrecht` | Barendrecht | getij (Oude Maas) |
 | `capelle` | Capelle aan den IJssel | getij (Hollandsche IJssel) + Algerakering-info |
 | `nijverdal` | Nijverdal | natuurbrandrisico + Heuvelrug-recreatie + pollen |
+| `rijssen-holten` | Rijssen-Holten | natuurbrandrisico + Holterberg-recreatie + pollen |
 | `almkerk` | Almkerk (Altena) | getij (Nieuwe Merwede/Biesbosch) + Biesbosch-recreatie + pollen |
 | `noordwijk` | Noordwijk aan Zee | kust: strandvlag + getij (Noordzee/Scheveningen) + zee & surf |
 | `goeree` | Goeree-Overflakkee | hybride: weer Middelharnis + kust van Ouddorp (strandvlag + getij Noordzee + zee & surf) |

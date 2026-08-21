@@ -343,8 +343,18 @@ function renderBarrierCard(tide: TideBlock, barrier: StormSurgeBarrier): string 
   return `<section class="card" id="barrierCard"><h2>🚧 ${escHtml(barrier.name)}</h2><div class="barrier__status ${statusCls}">${escHtml(statusTxt)}</div><div class="barrier__hw">${hwTxt}</div><p class="barrier__info">${escHtml(barrier.infoNL)}</p><div class="barrier__note">Indicatief — sluitpeil ${barrier.closeLevelCmNap} cm NAP. De daadwerkelijke sluiting bepaalt Rijkswaterstaat.</div></section>`;
 }
 
-function renderFireRiskCard(fr: FireRiskBlock): string {
-  return `<section class="card" id="fireRiskCard"><h2>🔥 Natuurbrandrisico</h2><div class="firerisk"><span class="firerisk__badge" style="background:${fr.color}">${escHtml(fr.label)}</span><span class="firerisk__reason">${escHtml(fr.reasonNL)}</span></div><div class="firerisk__note">Indicatief — afgeleid uit het weer, geen officiële natuurbrandindex.</div></section>`;
+function renderFireRiskCard(fr: FireRiskBlock, t: Strings): string {
+  const labels: Record<1 | 2 | 3 | 4, string> = {
+    1: t.fireRiskLow,
+    2: t.fireRiskModerate,
+    3: t.fireRiskHigh,
+    4: t.fireRiskVeryHigh,
+  };
+  const reasons: string[] = [t.fireRiskHumidity(Math.round(fr.humidity))];
+  if (fr.recentPrecipMm < 0.5) reasons.push(t.fireRiskDry);
+  else reasons.push(t.fireRiskRainToday(Number(fr.recentPrecipMm.toFixed(1))));
+  if (fr.bft >= 4) reasons.push(t.fireRiskWind(fr.bft));
+  return `<section class="card" id="fireRiskCard"><h2>${escHtml(t.fireRiskTitle)}</h2><div class="firerisk"><span class="firerisk__badge" style="background:${fr.color}">${escHtml(labels[fr.level])}</span><span class="firerisk__reason">${escHtml(reasons.join(' · '))}</span></div><div class="firerisk__note">${escHtml(t.fireRiskNote)}</div></section>`;
 }
 
 function renderNatureCard(nat: NatureRecreation, snap: WeerSnapshot): string {
@@ -439,7 +449,7 @@ function renderExtraSections(
     cards.push(renderBarrierCard(snap.tide, cfg.features.stormSurgeBarrier));
   }
   if (snap.fireRisk) {
-    cards.push(renderFireRiskCard(snap.fireRisk));
+    cards.push(renderFireRiskCard(snap.fireRisk, t));
   }
   if (cfg.features.natureRecreation) {
     cards.push(renderNatureCard(cfg.features.natureRecreation, snap));
