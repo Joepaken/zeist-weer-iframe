@@ -26,6 +26,7 @@ locatie, branding (logo + naam) en welke lokale extra-secties aan staan.
 | `kaatsheuvel` | Kaatsheuvel | idem Waalwijk (1:1 gedeelde data, andere naam) |
 | `oosterhout` | Oosterhout | natuurbrandrisico + Oosterhoutse bossen + pollen |
 | `roosendaal` | Roosendaal | natuurbrandrisico + Landgoed Visdonk + pollen |
+| `gooise-meren` | Gooise Meren (Bussum, Naarden, Muiden) | natuurbrandrisico + Goois Natuurreservaat + pollen |
 
 ## Endpoints
 
