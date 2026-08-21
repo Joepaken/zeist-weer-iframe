@@ -17,11 +17,13 @@ export interface FireRiskInput {
   recentPrecipMm: number; // neerslag vandaag (mm)
 }
 
-const LEVELS: Record<1 | 2 | 3 | 4, { label: string; color: string }> = {
-  1: { label: 'Laag', color: '#2BAE66' },
-  2: { label: 'Matig', color: '#F5C518' },
-  3: { label: 'Hoog', color: '#F07830' },
-  4: { label: 'Zeer hoog', color: '#E84313' },
+// Alleen kleur per niveau; labels en onderbouwing zijn taal-afhankelijk en
+// worden in render.ts (via i18n) opgebouwd uit de ruwe velden in het block.
+const LEVELS: Record<1 | 2 | 3 | 4, string> = {
+  1: '#2BAE66',
+  2: '#F5C518',
+  3: '#F07830',
+  4: '#E84313',
 };
 
 export function computeFireRisk(input: FireRiskInput): FireRiskBlock {
@@ -51,16 +53,11 @@ export function computeFireRisk(input: FireRiskInput): FireRiskBlock {
   else if (score <= 5) level = 3;
   else level = 4;
 
-  const reasons: string[] = [];
-  reasons.push(`${Math.round(input.humidity)}% luchtvochtigheid`);
-  if (input.recentPrecipMm < 0.5) reasons.push('droog');
-  else reasons.push(`${input.recentPrecipMm.toFixed(1)} mm regen vandaag`);
-  if (bft >= 4) reasons.push(`wind ${bft} Bft`);
-
   return {
     level,
-    label: LEVELS[level].label,
-    color: LEVELS[level].color,
-    reasonNL: reasons.join(' · '),
+    color: LEVELS[level],
+    humidity: input.humidity,
+    recentPrecipMm: input.recentPrecipMm,
+    bft,
   };
 }

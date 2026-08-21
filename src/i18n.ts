@@ -234,6 +234,18 @@ export interface Strings {
   rain1h: string;
   detailsUnavailable: string;
 
+  // Natuurbrandrisico
+  fireRiskTitle: string;
+  fireRiskLow: string;
+  fireRiskModerate: string;
+  fireRiskHigh: string;
+  fireRiskVeryHigh: string;
+  fireRiskHumidity: (pct: number) => string;
+  fireRiskDry: string;
+  fireRiskRainToday: (mm: number) => string;
+  fireRiskWind: (bft: number) => string;
+  fireRiskNote: string;
+
   // Strandvlag
   flagTitles: Record<FlagColor, string>;
   flagDescs: Record<FlagColor, string>;
@@ -347,6 +359,16 @@ export const STRINGS: Record<Lang, Strings> = {
     sunPower: 'Zonkracht',
     rain1h: 'Regen 1u',
     detailsUnavailable: 'Details niet beschikbaar',
+    fireRiskTitle: '🔥 Natuurbrandrisico',
+    fireRiskLow: 'Laag',
+    fireRiskModerate: 'Matig',
+    fireRiskHigh: 'Hoog',
+    fireRiskVeryHigh: 'Zeer hoog',
+    fireRiskHumidity: (p) => `${p}% luchtvochtigheid`,
+    fireRiskDry: 'droog',
+    fireRiskRainToday: (mm) => `${mm} mm regen vandaag`,
+    fireRiskWind: (bft) => `wind ${bft} Bft`,
+    fireRiskNote: 'Indicatief — afgeleid uit het weer, geen officiële natuurbrandindex.',
     flagTitles: flagMap(['Groene vlag', 'Gele vlag', 'Rode vlag', 'Dubbele rode vlag', 'Geen lifeguard']),
     flagDescs: flagMap([
       'Rustig — weinig wind en lage golven',
@@ -450,6 +472,16 @@ export const STRINGS: Record<Lang, Strings> = {
     sunPower: 'Solar power',
     rain1h: 'Rain 1h',
     detailsUnavailable: 'Details unavailable',
+    fireRiskTitle: '🔥 Wildfire risk',
+    fireRiskLow: 'Low',
+    fireRiskModerate: 'Moderate',
+    fireRiskHigh: 'High',
+    fireRiskVeryHigh: 'Very high',
+    fireRiskHumidity: (p) => `${p}% humidity`,
+    fireRiskDry: 'dry',
+    fireRiskRainToday: (mm) => `${mm} mm rain today`,
+    fireRiskWind: (bft) => `wind ${bft} Bft`,
+    fireRiskNote: 'Indicative — derived from the weather, not an official wildfire index.',
     flagTitles: flagMap(['Green flag', 'Yellow flag', 'Red flag', 'Double red flag', 'No lifeguard']),
     flagDescs: flagMap([
       'Calm — light wind and low waves',
@@ -553,6 +585,16 @@ export const STRINGS: Record<Lang, Strings> = {
     sunPower: 'Sonnenstrahlung',
     rain1h: 'Regen 1 Std.',
     detailsUnavailable: 'Details nicht verfügbar',
+    fireRiskTitle: '🔥 Waldbrandgefahr',
+    fireRiskLow: 'Gering',
+    fireRiskModerate: 'Mäßig',
+    fireRiskHigh: 'Hoch',
+    fireRiskVeryHigh: 'Sehr hoch',
+    fireRiskHumidity: (p) => `${p}% Luftfeuchtigkeit`,
+    fireRiskDry: 'trocken',
+    fireRiskRainToday: (mm) => `${mm} mm Regen heute`,
+    fireRiskWind: (bft) => `Wind ${bft} Bft`,
+    fireRiskNote: 'Indikativ — aus dem Wetter abgeleitet, kein offizieller Waldbrandindex.',
     flagTitles: flagMap(['Grüne Flagge', 'Gelbe Flagge', 'Rote Flagge', 'Doppelte rote Flagge', 'Keine Rettungswache']),
     flagDescs: flagMap([
       'Ruhig — wenig Wind und niedrige Wellen',
@@ -656,6 +698,16 @@ export const STRINGS: Record<Lang, Strings> = {
     sunPower: 'Nasłonecznienie',
     rain1h: 'Deszcz 1 godz.',
     detailsUnavailable: 'Szczegóły niedostępne',
+    fireRiskTitle: '🔥 Ryzyko pożaru lasu',
+    fireRiskLow: 'Niskie',
+    fireRiskModerate: 'Umiarkowane',
+    fireRiskHigh: 'Wysokie',
+    fireRiskVeryHigh: 'Bardzo wysokie',
+    fireRiskHumidity: (p) => `${p}% wilgotności`,
+    fireRiskDry: 'sucho',
+    fireRiskRainToday: (mm) => `${mm} mm deszczu dziś`,
+    fireRiskWind: (bft) => `wiatr ${bft} Bft`,
+    fireRiskNote: 'Orientacyjnie — na podstawie pogody, nie oficjalny indeks zagrożenia pożarowego.',
     flagTitles: flagMap(['Zielona flaga', 'Żółta flaga', 'Czerwona flaga', 'Podwójna czerwona flaga', 'Brak ratownika']),
     flagDescs: flagMap([
       'Spokojnie — słaby wiatr i niskie fale',
@@ -759,6 +811,16 @@ export const STRINGS: Record<Lang, Strings> = {
     sunPower: 'Rayonnement',
     rain1h: 'Pluie 1 h',
     detailsUnavailable: 'Détails indisponibles',
+    fireRiskTitle: "🔥 Risque d'incendie",
+    fireRiskLow: 'Faible',
+    fireRiskModerate: 'Modéré',
+    fireRiskHigh: 'Élevé',
+    fireRiskVeryHigh: 'Très élevé',
+    fireRiskHumidity: (p) => `${p} % d'humidité`,
+    fireRiskDry: 'sec',
+    fireRiskRainToday: (mm) => `${mm} mm de pluie aujourd'hui`,
+    fireRiskWind: (bft) => `vent ${bft} Bft`,
+    fireRiskNote: "Indicatif — déduit de la météo, pas un indice officiel d'incendie.",
     flagTitles: flagMap(['Drapeau vert', 'Drapeau jaune', 'Drapeau rouge', 'Double drapeau rouge', 'Pas de surveillance']),
     flagDescs: flagMap([
       'Calme — vent faible et vagues basses',

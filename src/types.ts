@@ -101,9 +101,10 @@ export interface TideBlock {
 
 export interface FireRiskBlock {
   level: 1 | 2 | 3 | 4; // 1=laag … 4=zeer hoog
-  label: string; // NL, bv. 'Matig'
-  color: string; // hex voor de badge
-  reasonNL: string; // korte onderbouwing
+  color: string; // hex voor de badge (taal-agnostisch)
+  humidity: number; // %, voor de onderbouwing (vertaald in render)
+  recentPrecipMm: number; // mm vandaag, voor de onderbouwing
+  bft: number; // windkracht, voor de onderbouwing
 }
 
 export interface MarineBlock {
